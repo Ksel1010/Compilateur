@@ -3,46 +3,46 @@ D   [0-9]
 C [A-Za-z]
 
 %%
-while             printf(" tWHILE");
-if                printf(" tIF");
-else              printf(" tELSE");
-case              printf(" tCASE");
-switch            printf(" tSWITCH");
-for               printf(" tFOR");
-void              printf(" tVOID");
-int               printf(" tINT");
-long              printf(" tLONG");
-char              printf(" tCHAR");
-float             printf(" tFLOAT");
-const             printf(" tCONST");
-return            printf(" tRETURN");
+while             return tWHILE;
+if                return tIF;
+else              return tELSE;
+case              return tCASE;
+switch            return tSWITCH;
+for               return tFOR;
+void              return tVOID;
+int               return tINT;
+long              return tLONG;
+char              return tCHAR;
+float             return tFLOAT;
+const             return tCONST;
+return            return tRETURN;
+default 		  return tDEFAULT;
 
+"_"               return tUNDER;
+"-"               return tMinus;
+"/"               return tSLASH;
+","               return tCOMMA;
+"*"               return tSTAR;
+"<"               return tST;
+">"               return tGT;
+"+"               return tADD;
+"=="              return tEQ;
+"="               return tAFFECT;
+"["               return tSOB;
+"]"               return tSCB;
+"{"               return tOB;
+"}"               return tCB;
+";"               return tSEM;
+"("               return tOP;
+")"               return tCP;
 
-"_"               printf(" tUNDER");
-"-"               printf(" tMinus");
-"/"               printf(" tSLASH");
-","               printf(" tCOMMA");
-"*"               printf(" tSTAR");
-"<"               printf(" tST");
-">"               printf(" tGT");
-"+"               printf(" tADD");
-"=="              printf(" tEQ");
-"="               printf(" tAFFECT");
-"["               printf(" tSOB");
-""               printf(" tSCB");
-"{"               printf(" tOB");
-"}"               printf(" tCB");
-";"               printf(" tSEM");
-"("               printf(" tOP");
-")"               printf(" tCP");
-
-{D}+              printf(" tNB[%s]", yytext);
-{C}({C}|{D}|"_")* printf(" tID[%s]", yytext);
+{D}+              return tNB[%s], yytext;
+{C}({C}|{D}|"_")* return tID[%s], yytext;
 
 " "               { }
 \t                { }
 \n                { }
-.                 { printf(" ERROR\n"); exit(2); }
+.                 { return ERROR\n; exit(2); }
 
 %%
 
