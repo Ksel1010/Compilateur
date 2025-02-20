@@ -1,24 +1,41 @@
+%token tWHILE tIF tELSE tCASE tSWITCH tFOR tRETURN tDEFAULT // Mots clés
+%token tVOID tINT tLONG tCHAR tFLOAT tCONST // Types
+%token tSOE tGOE tDIF tST tGT tDEQ tL_AND tL_OR // Opérateurs logiques
+%token tSLASH tSTAR tMINUS tPLUS tEQ tAND tNOT tOR tXOR// Operateurs sur nombre
+%token tUNDER tCOMMA tSOB tSCB tOB tCB tSEM tOP tCP //Ponctuations
+%token tID tNB
 
 %%
+
+/*=============Élément à utiliser partout=============*/
+
 Type : Type tSTAR
-     | (tINT)
-     | (tVOID)
-     | (tLONG)
-     | (tCHAR)
-     | (tFLOAT)
-     | (tCONST);
+     | tINT
+     | tVOID
+     | tLONG
+     | tCHAR
+     | tFLOAT
+     | tCONST;
 
-function : tID tOP Args tPF Body;
+Operateur : tMINUS
+     | tPLUS
+     | tSTAR
+     | tSLASH;
+     | tAND
+     | tNOT
+     | tOR
+     | tXOR
 
+Comparateur : tGT
+     | tST
+     | tSOE
+     | tGOE
+     | tDIF
+     | tDEQ;
+     | tL_AND
+     | tL_OR;
 
-Args : Argr
-     | ;  
-
-Argr : Arg 
-    | Arg tCOMMA Argr;
-
-Arg : Type tID;
-
+/*Corps d'une fonction/Instruction*/
 Body : tOB Is tCB;
 
 Is : I
@@ -27,9 +44,11 @@ Is : I
 I : IfElse
      | While
      | For
-     | SwitchCase
+//     | SwitchCase
      | Declaration
      | Affectation;
+
+/*Pour les conditions ( if while etc...)*/
 
 Expression : tID
     | tNB;
@@ -40,22 +59,58 @@ Conditions : Condition
 
 Condition : Expression
      | Expression Comparateur Expression
-     | tOP Expression Comparateur Expression tCP
+     | tOP Expression Comparateur Expression tCP;
 
-/* Declaration + Affection */
-Declaration : Type IDs tSC
-    | Type IDs tEQ Expression tSC;
+/*Operation*/ 
+// Pour le moment focus sur les int avec mult add et soust plus tard ajouter char (concatenation...) float etc...
+// Si on complete on devrait créer un autre nom pour les type sur lesquelles on apllique des opperation pour pas les melanger avec void etc...
 
-Affectation : IDs tEQ Expression tSC;
+OperationsInt : OperationInt
+     |   tOP OperationInt Operateur  OperationInt tCP
+     |   OperationInt  Operateur  OperationInt ;
 
+OperationInt : tINT Operateur tINT
+     | tOP tINT Operateur tINT tCP;
+/* Declaration et Affection */
 IDs : tID 
-     | tID tCOMMA IDS;
+     | tID tCOMMA IDs;
 
-/*If et Swtich*/
+Declaration : Type IDs tSEM
+     | Type IDs tEQ Expression tSEM;
+
+Affectation : IDs tEQ Expression tSEM;
+
+
+/*=============Fontion=============*/
+Fonction : Type tID tOP Args tCP Body;
+
+Args : Argr
+     | ;  
+
+Argr : Arg 
+     | Arg tCOMMA Argr;
+
+Arg : Type tID;
+
+
+
+/*=============If et Switch=============*/
 
 IfElse : tIF tOP Conditions tCP Body 
-    | tIF tIF tOP Conditions tCP Body tELSE Body;
+     | tIF tOP Conditions tCP Body tELSE Body;
 
 //TODO SWITCH CASE
 
-/* Loop */
+/*=============Boucle for et while=============*/ // Pourquoi pas faire le doWhile plus tard
+
+While : tWHILE tOP Conditions tCP Body;
+
+//Une boucle for c'est : for (affectation ou declaration, condition d'arret, incrementation)
+//ici je prefere utilise la regle operation plutot que d'en créer une juste pour les incremation ( du genre a = a*2 / a = a+1 / a++ etc...)
+For : tFOR tOP Affectation tSEM Conditions tSEM OperationsInt tCP Body
+     | tFOR tOP Affectation tSEM Conditions tSEM OperationsInt tCP Body
+
+
+
+//Est ce que c'est le role de l'analyseur syntaxique de detecteur qu'un fonction autre que void doit avoir un return dans le body 
+// ou ou est ce que c'est a l'analyseur semantique 
