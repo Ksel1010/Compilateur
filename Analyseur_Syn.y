@@ -2,7 +2,7 @@
 %token tVOID tINT tLONG tCHAR tFLOAT tCONST // Types
 %token tSOE tGOE tDIF tST tGT tDEQ tL_AND tL_OR // Opérateurs logiques
 %token tSLASH tSTAR tMINUS tPLUS tEQ tAND tNOT tOR tXOR// Operateurs sur nombre
-%token tUNDER tCOMMA tSOB tSCB tOB tCB tSEM tOP tCP //Ponctuations
+%token tUNDER tCOMMA tSOB tSCB tOB tCB tSEM tOP tCP tCOLON //Ponctuations
 %token tID tNB
 
 %%
@@ -17,45 +17,46 @@ Type : Type tSTAR
      | tFLOAT
      | tCONST;
 
-Operateur : tMINUS
+OperateurMath : tMINUS
      | tPLUS
      | tSTAR
-     | tSLASH;
+     | tSLASH
      | tAND
-     | tNOT
      | tOR
-     | tXOR
+     | tXOR;
 
 Comparateur : tGT
      | tST
      | tSOE
      | tGOE
      | tDIF
-     | tDEQ;
+     | tDEQ
      | tL_AND
      | tL_OR;
 
 /*Corps d'une fonction/Instruction*/
-Body : tOB Is tCB;
+Body : tOB IRec tCB;
 
-Is : I
-     | Is;
+IRec : I
+     | I IRec;
 
 I : IfElse
      | While
      | For
 //     | SwitchCase
      | Declaration
-     | Affectation;
+     | Affectation
+     | tRETURN Expression tSEM
+     |;
 
 /*Pour les conditions ( if while etc...)*/
 
 Expression : tID
     | tNB;
 
-Conditions : Condition
-     |   tOP Condition Comparateur  Conditions tCP
-     |   Condition  Comparateur  Conditions ;
+ConditionRec : Condition
+     |   tOP Condition Comparateur  ConditionRec tCP
+     |   Condition  Comparateur  ConditionRec ;
 
 Condition : Expression
      | Expression Comparateur Expression
@@ -65,26 +66,28 @@ Condition : Expression
 // Pour le moment focus sur les int avec mult add et soust plus tard ajouter char (concatenation...) float etc...
 // Si on complete on devrait créer un autre nom pour les type sur lesquelles on apllique des opperation pour pas les melanger avec void etc...
 
-OperationsInt : OperationInt
-     |   tOP OperationInt Operateur  OperationInt tCP
-     |   OperationInt  Operateur  OperationInt ;
+OperationIntRec : OperationInt
+     |   tOP OperationInt OperateurMath  OperationIntRec tCP
+     |   OperationInt  OperateurMath  OperationIntRec ;
 
-OperationInt : tINT Operateur tINT
-     | tOP tINT Operateur tINT tCP;
+OperationInt : Expression OperateurMath Expression
+     | tOP Expression OperateurMath Expression tCP
+     | tNOT Expression
+     | Expression;
 /* Declaration et Affection */
-IDs : tID 
-     | tID tCOMMA IDs;
+IDRec : tID 
+     | tID tCOMMA IDRec;
 
-Declaration : Type IDs tSEM
-     | Type IDs tEQ Expression tSEM;
+Declaration : Type IDRec tSEM
+     | Type IDRec tEQ Expression tSEM;
 
-Affectation : IDs tEQ Expression tSEM;
+Affectation : IDRec tEQ Expression tSEM;
 
 
 /*=============Fontion=============*/
-Fonction : Type tID tOP Args tCP Body;
+Fonction : Type tID tOP ArgRec tCP Body;
 
-Args : Argr
+ArgRec : Argr
      | ;  
 
 Argr : Arg 
@@ -96,21 +99,28 @@ Arg : Type tID;
 
 /*=============If et Switch=============*/
 
-IfElse : tIF tOP Conditions tCP Body 
-     | tIF tOP Conditions tCP Body tELSE Body;
+IfElse : tIF tOP ConditionRec tCP Body 
+     | tIF tOP ConditionRec tCP Body tELSE Body;
 
 //TODO SWITCH CASE
 
 /*=============Boucle for et while=============*/ // Pourquoi pas faire le doWhile plus tard
 
-While : tWHILE tOP Conditions tCP Body;
+While : tWHILE tOP ConditionRec tCP Body;
 
 //Une boucle for c'est : for (affectation ou declaration, condition d'arret, incrementation)
 //ici je prefere utilise la regle operation plutot que d'en créer une juste pour les incremation ( du genre a = a*2 / a = a+1 / a++ etc...)
-For : tFOR tOP Affectation tSEM Conditions tSEM OperationsInt tCP Body
-     | tFOR tOP Affectation tSEM Conditions tSEM OperationsInt tCP Body
+For : tFOR tOP Affectation ConditionRec tSEM OperationIntRec tCP Body
+     | tFOR tOP Declaration ConditionRec tSEM OperationIntRec tCP Body
+     | tFOR tOP 
 
 
 
-//Est ce que c'est le role de l'analyseur syntaxique de detecteur qu'un fonction autre que void doit avoir un return dans le body 
-// ou ou est ce que c'est a l'analyseur semantique 
+
+/*
+Remarque :
+     - Comment faire pour ajouter une regle pour les tableaux ? => tID tSOB tNB tSCB = tNB ou tOB (tNb tSC)* tCB
+Question :
+     - Est ce que c'est le role de l'analyseur syntaxique de detecter qu'une fonction autre que void doit avoir un return dans le body 
+ou ou est ce que c'est a l'analyseur semantique 
+*/

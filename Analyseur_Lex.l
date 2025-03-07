@@ -17,19 +17,19 @@ long              	return tLONG;
 char              	return tCHAR;
 float             	return tFLOAT;
 const             	return tCONST;
-return            	return tRETURN;
-default 		  	return tDEFAULT;
+return              return tRETURN;
+default             return tDEFAULT;
 
 
 %{Symboles de comparaison %}
-"<="			  	return tSOE;
-">="			  	return tGOE;
-"!="		      	return tDIF;
-"<"               	return tST;
-">"               	return tGT;
-"=="              	return tDEQ;
-"&&"			  	return tL_AND;
-"||"			  	return tL_OR;
+"<="                return tSOE;
+">="                return tGOE;
+"!="                return tDIF;
+"<"                 return tST;
+">"                 return tGT;
+"=="                return tDEQ;
+"&&"                return tL_AND;
+"||"                return tL_OR;
 
 %{Opérateurs %} 
 %{Peut etre ajouter  les ++ += ...%}
@@ -40,10 +40,10 @@ default 		  	return tDEFAULT;
 "="               	return tEQ;
 
 %{Opérateurs bit à bit %}
-"&"				  	return tAND;
-"!"				  	return tNOT;
-"|"				  	return tOR;
-"^" 			  	return tXOR
+"&"                 return tAND;
+"!"                 return tNOT;
+"|"                 return tOR;
+"^"                 return tXOR
 
 
 %{Ponctuations %}
@@ -56,7 +56,7 @@ default 		  	return tDEFAULT;
 ";"               	return tSEM;
 "("             	return tOP;
 ")"               	return tCP;
-":"				  	return tCOLON
+":"                 return tCOLON
 
 %{Token Générales%}
 {D}+              	return tNB[%s], yytext;
@@ -69,7 +69,3 @@ default 		  	return tDEFAULT;
 .                 	{ return ERROR\n; exit(2); }
 
 %%
-
-void main(void) {
-	yylex();
-}
