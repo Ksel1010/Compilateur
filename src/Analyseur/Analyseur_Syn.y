@@ -1,13 +1,27 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "y.tab.h"
+#include "ts.h"
+
+
+TS * ts;
 
 /* Déclarations des fonctions */
 int yylex(void);
 void yyerror(const char *s);
+
 %}
-/* to do : 
+
+
+%union {
+     int nb;
+     char id[30];
+}
+
+/* to do : GESTION tID !!!!
+          - add printf avec 1 seul argument (voir la doc)
           -add AND XOR OR 
           -Instruction switchcase*/
 %token tWHILE tIF tELSE tCASE tSWITCH tFOR tRETURN tDEFAULT // Mots clés
@@ -15,9 +29,9 @@ void yyerror(const char *s);
 %token tSOE tGOE tDIF tST tGT tDEQ tL_AND tL_OR // Opérateurs logiques
 %token tSLASH tSTAR tMINUS tPLUS tEQ tAND tNOT tOR tXOR// Operateurs sur nombre
 %token tUNDER tCOMMA tSOB tSCB tOB tCB tSEM tOP tCP tCOLON //Ponctuations
-%token tERROR 
-%token tID 
-%token tNB
+%token tERROR tPRINTF
+%token <id> tID
+%token <nb> tNB
 
 
 /* Modification des priorités */
@@ -44,6 +58,9 @@ Type : Type tSTAR
      | tCHAR
      | tFLOAT
      | tCONST;
+/*impression d'une valeur*/
+
+//Impression : tPRINTF tOP tID tCP tSEM;
 
 
 /*Corps d'une fonction/Instruction*/
@@ -64,17 +81,17 @@ I : IfElse
 
 
 
-Condition : Condition tGT Condition
-          | Condition tST Condition
-          | Condition tSOE Condition
-          | Condition tGOE Condition
-          | Condition tDIF Condition
-          | Condition tDEQ Condition
-          | Condition tL_AND Condition
-          | Condition tL_OR Condition
+Condition : Condition tGT Condition 
+          | Condition tST Condition 
+          | Condition tSOE Condition 
+          | Condition tGOE Condition 
+          | Condition tDIF Condition 
+          | Condition tDEQ Condition 
+          | Condition tL_AND Condition 
+          | Condition tL_OR Condition 
           | tNOT Condition
-          | Condition tXOR Condition
-          | tOP Condition tCP
+          | Condition tXOR Condition 
+          | tOP Condition tCP           
           | Operation;
 
 
@@ -85,22 +102,56 @@ Condition : Condition tGT Condition
 
 
 
-Operation : Operation tPLUS Operation
-          | Operation tMINUS Operation
-          | Operation tSTAR Operation
-          | Operation tSLASH Operation
+Operation : Operation tPLUS Operation 
+          | Operation tMINUS Operation 
+          | Operation tSTAR Operation 
+          | Operation tSLASH Operation 
           | tOP Operation tCP
-          | tID
-          | tNB;
+          | tID 
+          | tNB ;
 
 /* Declaration et Affection */
-IDRec : tID 
-     | tID tCOMMA IDRec;
+Declaration : Type  DecIDRec tSEM;
 
-Declaration : Type  IDRec tSEM 
-     | Type IDRec tEQ Operation tSEM;
+DecIDRec : DecID
+          | DecID tCOMMA DecIDRec;
 
-Affectation : IDRec tEQ Operation tSEM;
+DecID : tID {Symbol s = {"",1,TYPE_INT};
+           strcpy(s.name, $1); 
+           ts=TS_push(ts, s);
+           } 
+           tEQ Operation
+     | tID {Symbol s = {"",0,TYPE_INT};
+           strcpy(s.name, $1);
+           ts=TS_push(ts, s);}
+           ;
+
+
+
+Affectation : AffIDRec tSEM;
+
+AffIDRec : AffID {}
+          | AffID tCOMMA AffIDRec;
+
+AffID : tID
+          { Symbol s = {"",0,TYPE_INT};
+            strcpy(s.name, $1); 
+            Symbol * address = TS_exist(ts, s.name);
+            TS_print(ts);
+            if(address != NULL){
+               address->state = 1;
+          }
+            else{
+               printf("Variable %s non déclarée", $1);
+            } 
+          }
+          tEQ Operation
+     | tID {Symbol s = {"",0,TYPE_INT};
+           strcpy(s.name, $1);
+           ts=TS_push(ts, s);}
+           ;
+
+
 
 
 /*=============Fonction=============*/
@@ -146,13 +197,15 @@ Question :
 %%
 int main(void)
 {
+     ts = TS_init();
      return yyparse();
 }
-
-void tableaux
 
 
 void yyerror(const char *s)
 {
      fprintf(stderr, "%s\n", s);
 }
+
+
+

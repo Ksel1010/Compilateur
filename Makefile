@@ -1,9 +1,9 @@
 TARGETL = Analyseur_Lex
 TARGETS = Analyseur_Syn
 all: 
-	-yacc -d $(TARGETS).y 
+	-yacc -t -g -v -d $(TARGETS).y 
 	-lex $(TARGETL).l 
-	-gcc lex.yy.c y.tab.c -o compilo.exe
+	-gcc -g lex.yy.c y.tab.c -o compilo.exe
 	-./compilo.exe < test.c
 
 lex:

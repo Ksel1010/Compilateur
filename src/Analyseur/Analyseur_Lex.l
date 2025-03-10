@@ -2,12 +2,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "y.tab.h"
+#include "ts.h"
 %}
 D [0-9]
 C [A-Za-z]
 
 %%
 
+printf              return tPRINTF;
 main             	return tMAIN; 
 while             	return tWHILE;
 if                	return tIF;
@@ -58,8 +60,8 @@ default             return tDEFAULT;
 ")"               	return tCP;
 ":"                 return tCOLON;
 
-{D}+              	{return tNB ;}
-{C}({C}|{D}|"_")* 	{return tID;}
+{D}+              	{yylval.nb = atoi(yytext); return tNB ;}
+{C}({C}|{D}|"_")* 	{strcpy(yylval.id, yytext); return tID;}
 
 " "               	{ }
 \t                	{ }
