@@ -33,5 +33,5 @@ void TS_print(TS * ts);
 
 TS * TS_push(TS * TS, Symbol symbol);
 
-Symbol*  TS_exist(TS * TS, char name[TAILLE]);
+TS*  TS_exist(TS * TS, char name[TAILLE]);
 #endif

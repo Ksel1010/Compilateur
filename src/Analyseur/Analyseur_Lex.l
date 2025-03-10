@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "y.tab.h"
-#include "ts.h"
+#include "src/C/ts.h"
 %}
 D [0-9]
 C [A-Za-z]

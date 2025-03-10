@@ -3,10 +3,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include "y.tab.h"
-#include "ts.h"
+#include "src/C/ts.h"
+#include "src/C/asm.h"
+
 
 
 TS * ts;
+Asm* asmT;
 
 /* Déclarations des fonctions */
 int yylex(void);
@@ -31,7 +34,9 @@ void yyerror(const char *s);
 %token tUNDER tCOMMA tSOB tSCB tOB tCB tSEM tOP tCP tCOLON //Ponctuations
 %token tERROR tPRINTF
 %token <id> tID
-%token <nb> tNB
+%token <nb> tNB 
+
+%type <id> AffIDRec AffID
 
 
 /* Modification des priorités */
@@ -69,18 +74,18 @@ Body : tOB IRec tCB;
 IRec : I 
      | I IRec;
 
-I : IfElse
+I : //IfElse
 //     | While
 //     | For 
 //     | SwitchCase
-     | Declaration 
+      Declaration 
      | Affectation 
      | tRETURN Operation tSEM ;
 
 /*Pour les conditions ( if while etc...)*/
 
 
-
+/*
 Condition : Condition tGT Condition 
           | Condition tST Condition 
           | Condition tSOE Condition 
@@ -93,7 +98,7 @@ Condition : Condition tGT Condition
           | Condition tXOR Condition 
           | tOP Condition tCP           
           | Operation;
-
+*/
 
 
 /*Operation*/ 
@@ -102,56 +107,98 @@ Condition : Condition tGT Condition
 
 
 
-Operation : Operation tPLUS Operation 
+Operation : Operation tPLUS Operation {}
           | Operation tMINUS Operation 
           | Operation tSTAR Operation 
           | Operation tSLASH Operation 
           | tOP Operation tCP
-          | tID 
-          | tNB ;
+          | tID
+  /*             {
+               printf("%s\n", $1);
+               Symbol temp = {"temp",0,TYPE_INT};
+               ts = TS_push(ts, temp);
+               TS* sous_ts = TS_exist(ts, $1);
+               if (index!=NULL){
+                    ASM_add(asmT, COP, ts->indice, sous_ts->indice, 0);
+               }
+               }*/
+          | tNB 
+               {
+               printf("%d\n", $1);
+               Symbol temp = {"temp",0,TYPE_INT};
+               ts = TS_push(ts, temp);
+               ASM_add(asmT, AFC, ts->indice, $1,0);
+               }
 
 /* Declaration et Affection */
-Declaration : Type  DecIDRec tSEM;
+Declaration : {printf("declaration: \n");}Type  DecIDRec tSEM ;
 
 DecIDRec : DecID
-          | DecID tCOMMA DecIDRec;
+          | DecID tCOMMA{printf(",\n");} DecIDRec;
 
 DecID : tID {Symbol s = {"",1,TYPE_INT};
            strcpy(s.name, $1); 
            ts=TS_push(ts, s);
+           printf("%s = ", $1);
            } 
-           tEQ Operation
-     | tID {Symbol s = {"",0,TYPE_INT};
+           tEQ Operation {
+               //printf("Declaration ID %s \n", $1);
+               TS* sous_ts = TS_exist(ts, $1);
+               if(sous_ts!= NULL){
+                    ASM_add(asmT, COP, sous_ts->indice, ts->indice, 0);
+                    TS_pop(ts);
+               }
+           }
+     | tID {
+           Symbol s = {"",0,TYPE_INT};
+           printf("%s \n", $1);
            strcpy(s.name, $1);
-           ts=TS_push(ts, s);}
+           ts=TS_push(ts, s);
+          }
            ;
 
 
 
-Affectation : AffIDRec tSEM;
+Affectation : AffIDRec tSEM 
+          {
+               //printf("affectation %s \n", $1);
+               TS* sous_ts = TS_exist(ts, $1);
+               if(sous_ts!= NULL){
+                    ASM_add(asmT, COP, sous_ts->indice, ts->indice, 0);
+                    TS_pop(ts);
+               }
+          };
 
-AffIDRec : AffID {}
-          | AffID tCOMMA AffIDRec;
+AffIDRec : AffID 
+          |AffID tCOMMA  
+          {
+          //printf("affectation IDREC-2 %s \n", $1);
+          TS * sous_ts = TS_exist(ts, $1);
+          if(sous_ts != NULL){
+               ASM_add(asmT, COP, sous_ts->indice, ts->indice, 0);
+               TS_pop(ts);
+          }
+          } AffIDRec;
 
 AffID : tID
-          { Symbol s = {"",0,TYPE_INT};
-            strcpy(s.name, $1); 
-            Symbol * address = TS_exist(ts, s.name);
-            TS_print(ts);
-            if(address != NULL){
-               address->state = 1;
+         { 
+          //printf("affectation ID %s \n", $1);
+          Symbol s = {"",0,TYPE_INT};
+          strcpy(s.name, $1); 
+          printf("$1 : %s\n", $1);
+          TS * sous_ts = TS_exist(ts, s.name);
+          TS_print(ts);
+          if(sous_ts != NULL){
+               sous_ts->symbol.state = 1;
+
           }
-            else{
+          else{
                printf("Variable %s non déclarée", $1);
-            } 
+               return 1;
+          } 
           }
           tEQ Operation
-     | tID {Symbol s = {"",0,TYPE_INT};
-           strcpy(s.name, $1);
-           ts=TS_push(ts, s);}
-           ;
-
-
+          ;
 
 
 /*=============Fonction=============*/
@@ -170,9 +217,9 @@ Arg : Type tID;
 
 /*=============If et Switch=============*/
 
-IfElse : tIF tOP Condition tCP Body 
+/*IfElse : tIF tOP Condition tCP Body 
      | tIF tOP Condition tCP Body tELSE Body;
-
+*/
 //TODO SWITCH CASE
 
 
@@ -198,6 +245,7 @@ Question :
 int main(void)
 {
      ts = TS_init();
+     asmT = ASM_init();
      return yyparse();
 }
 

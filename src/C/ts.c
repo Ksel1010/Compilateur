@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "ts.h"
 
 /* declaration d'un symbol */
@@ -14,9 +17,10 @@ TS * TS_init(){
     return NULL;
 }
 
-Symbol pop(TS * ts){
+Symbol TS_pop(TS * ts){
     Symbol symbol = ts->symbol;
     ts = ts->next;
+    //Free
     return symbol;
 }
 
@@ -25,16 +29,20 @@ TS * TS_push(TS * ts, Symbol symbol){
     TS * newTS = (TS *) malloc(sizeof(TS));
     newTS->symbol = symbol;
     newTS->next = ts;
-    if (ts) newTS->indice = ts->indice + 1;
-    else newTS->indice = 0;
+    if (ts){
+        newTS->indice = ts->indice + 1;
+    }
+    else{
+        newTS->indice = 0;
+    }
     return newTS;
 }
 
-Symbol*  TS_exist(TS * ts, char name[TAILLE]){
+TS*  TS_exist(TS * ts, char name[TAILLE]){
     TS * current = ts;
     while(current != NULL){
          if(strcmp(current->symbol.name, name) == 0){
-              return &(current->symbol);
+              return current;
          }
          current = current->next;
     }
