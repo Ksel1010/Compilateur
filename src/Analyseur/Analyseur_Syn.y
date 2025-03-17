@@ -36,8 +36,8 @@ void yyerror(const char *s);
 %token <id> tID
 %token <nb> tNB 
 
-%type <id> AffIDRec AffID
-
+%type <id> AffIDRec AffID 
+%type <nb> Operation Condition
 
 /* Modification des priorités */
 %left tOR tL_OR
@@ -80,25 +80,66 @@ I : //IfElse
 //     | SwitchCase
       Declaration 
      | Affectation 
-     | tRETURN Operation tSEM ;
+     | tRETURN Operation tSEM 
+     | Condition tSEM; // a enlever apres avoir fait le if
 
 /*Pour les conditions ( if while etc...)*/
 
 
-/*
+
 Condition : Condition tGT Condition 
+               {
+                    ASM_add(asmT, SUP, ts->indice - 1, ts-> indice, 0);
+                    Symbol s = TS_pop(ts);
+               }
           | Condition tST Condition 
+               {
+                    ASM_add(asmT, INF, ts->indice - 1, ts-> indice, 0);
+                    Symbol s = TS_pop(ts);
+               }
           | Condition tSOE Condition 
+               {
+                    ASM_add(asmT, SUPE, ts->indice - 1, ts-> indice, 0);
+                    Symbol s = TS_pop(ts);
+               }
           | Condition tGOE Condition 
-          | Condition tDIF Condition 
+               {
+                    ASM_add(asmT, INFE, ts->indice - 1, ts-> indice, 0);
+                    Symbol s = TS_pop(ts);
+               }
+          | Condition tDIF Condition
+               {
+                    ASM_add(asmT, NEQU, ts->indice - 1, ts-> indice, 0);
+                    Symbol s = TS_pop(ts);
+               }
           | Condition tDEQ Condition 
+               {
+                    ASM_add(asmT, EQU, ts->indice - 1, ts-> indice, 0);
+                    Symbol s = TS_pop(ts);
+               }
           | Condition tL_AND Condition 
+               {
+                    ASM_add(asmT, AND, ts->indice - 1, ts-> indice, 0);
+                    Symbol s = TS_pop(ts);
+               }
           | Condition tL_OR Condition 
+               {
+                    ASM_add(asmT, OR, ts->indice - 1, ts-> indice, 0);
+                    Symbol s = TS_pop(ts);
+               }
           | tNOT Condition
+               {
+                    ASM_add(asmT, NOT, ts->indice - 1, ts-> indice, 0);
+                    Symbol s = TS_pop(ts);
+               }
           | Condition tXOR Condition 
-          | tOP Condition tCP           
+               {
+                    ASM_add(asmT, XOR, ts->indice - 1, ts-> indice, 0);
+                    Symbol s = TS_pop(ts);
+               }
+          | tOP Condition tCP { $$ = $2 ; }    
           | Operation;
-*/
+
 
 
 /*Operation*/ 
@@ -107,13 +148,30 @@ Condition : Condition tGT Condition
 
 
 
-Operation : Operation tPLUS Operation {}
+Operation : Operation tPLUS Operation 
+               {
+                    ASM_add(asmT, ADD, ts->indice - 1, ts-> indice, ts->indice-1);
+                    Symbol s = TS_pop(ts);
+               }
           | Operation tMINUS Operation 
+               {
+                    ASM_add(asmT, SOU, ts->indice - 1, ts-> indice, ts->indice-1);
+                    Symbol s = TS_pop(ts);
+               }
           | Operation tSTAR Operation 
+               {
+                    ASM_add(asmT, MUL, ts->indice - 1, ts-> indice, ts->indice-1);
+                    Symbol s = TS_pop(ts);
+               }
           | Operation tSLASH Operation 
-          | tOP Operation tCP
+               {
+                    ASM_add(asmT, DIV, ts->indice - 1, ts-> indice, ts->indice-1);
+                    Symbol s = TS_pop(ts);
+               }
+          | tOP Operation tCP { $$ = $2 ; }
           | tID
-  /*             {
+          
+             {
                printf("%s\n", $1);
                Symbol temp = {"temp",0,TYPE_INT};
                ts = TS_push(ts, temp);
@@ -121,7 +179,11 @@ Operation : Operation tPLUS Operation {}
                if (index!=NULL){
                     ASM_add(asmT, COP, ts->indice, sous_ts->indice, 0);
                }
-               }*/
+               else{
+                    printf("Variable %s non déclarée", $1);
+                    return 1;
+               }
+               }
           | tNB 
                {
                printf("%d\n", $1);
@@ -231,7 +293,7 @@ Arg : Type tID;
 
 /*=============If et Switch=============*/
 
-/*IfElse : tIF tOP Condition tCP Body 
+/*IfElse : tIF tOP Condition tCP { add JFM ; $1 = @JMF} Body 
      | tIF tOP Condition tCP Body tELSE Body;
 */
 //TODO SWITCH CASE

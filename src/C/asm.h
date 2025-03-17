@@ -7,12 +7,22 @@
 #define DIV 4 // /
 #define COP 5 // copy
 #define AFC 6 // affect 
+
 #define JMP 7 // jump if inconditionnel
 #define JMF 8 // jump if false
-#define INf 9 // inferieur
-#define SUP 10 // superieur
-#define EQU 11 // equal
-#define PRI 12 // print
+
+#define INF 9 // inferieur
+#define INFE 10 // inferieur ou egal
+#define SUP 11 // superieur
+#define SUPE 12 // superieur ou egal
+#define EQU 13 // equal
+#define NEQU 14 // not equal
+#define OR 15 // or
+#define AND 16 // and
+#define NOT 17 // not
+#define XOR 18 // xor
+
+#define PRI 19 // print
 
 
 typedef struct Instruction 
