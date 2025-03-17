@@ -137,16 +137,22 @@ DecIDRec : DecID
           | DecID tCOMMA{printf(",\n");} DecIDRec;
 
 DecID : tID {Symbol s = {"",1,TYPE_INT};
+          
            strcpy(s.name, $1); 
            ts=TS_push(ts, s);
            printf("%s = ", $1);
-           } 
-           tEQ Operation {
+           }
+           
+            
+     tEQ Operation 
+           
+           {
+               printf("Debut operation \n");
                //printf("Declaration ID %s \n", $1);
                TS* sous_ts = TS_exist(ts, $1);
                if(sous_ts!= NULL){
                     ASM_add(asmT, COP, sous_ts->indice, ts->indice, 0);
-                    TS_pop(ts);
+                    Symbol s = TS_pop(ts);
                }
            }
      | tID {
@@ -161,28 +167,27 @@ DecID : tID {Symbol s = {"",1,TYPE_INT};
 
 Affectation : AffIDRec tSEM 
           {
-               //printf("affectation %s \n", $1);
-               TS* sous_ts = TS_exist(ts, $1);
-               if(sous_ts!= NULL){
-                    ASM_add(asmT, COP, sous_ts->indice, ts->indice, 0);
-                    TS_pop(ts);
-               }
+               printf("affectation %s \n", $1);
           };
 
 AffIDRec : AffID 
-          |AffID tCOMMA  
-          {
-          //printf("affectation IDREC-2 %s \n", $1);
+          
+          |AffID tCOMMA 
+     /*     {
+          printf("affectation IDREC-2 %s \n", $1);
           TS * sous_ts = TS_exist(ts, $1);
           if(sous_ts != NULL){
                ASM_add(asmT, COP, sous_ts->indice, ts->indice, 0);
                TS_pop(ts);
           }
-          } AffIDRec;
+          //strcpy($$, $1);
+          } */
+          AffIDRec;
+          
 
 AffID : tID
          { 
-          //printf("affectation ID %s \n", $1);
+          printf("affectation ID  ligne 190 : %s \n", $1);
           Symbol s = {"",0,TYPE_INT};
           strcpy(s.name, $1); 
           printf("$1 : %s\n", $1);
@@ -198,6 +203,15 @@ AffID : tID
           } 
           }
           tEQ Operation
+
+          {
+               TS * sous_ts = TS_exist(ts, $1);
+               if(sous_ts != NULL){
+                    ASM_add(asmT, COP, sous_ts->indice, ts->indice, 0);
+                    Symbol s  = TS_pop(ts);
+                    printf("symbol : %s\n", s.name);
+               }
+          }
           ;
 
 
@@ -246,7 +260,11 @@ int main(void)
 {
      ts = TS_init();
      asmT = ASM_init();
-     return yyparse();
+     yyparse();
+     ASM_print(asmT);
+     TS_print(ts);
+
+     return 0;
 }
 
 

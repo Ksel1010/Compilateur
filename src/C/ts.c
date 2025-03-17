@@ -19,22 +19,24 @@ TS * TS_init(){
 
 Symbol TS_pop(TS * ts){
     Symbol symbol = ts->symbol;
-    ts = ts->next;
+    *ts = *ts->next;
     //Free
+    
     return symbol;
 }
 
 TS * TS_push(TS * ts, Symbol symbol){
-    printf("add: %s\n", symbol.name);
+    printf("push: %s\n", symbol.name);
     TS * newTS = (TS *) malloc(sizeof(TS));
     newTS->symbol = symbol;
     newTS->next = ts;
-    if (ts){
+    if (ts != NULL){
         newTS->indice = ts->indice + 1;
     }
     else{
         newTS->indice = 0;
     }
+    TS_print(newTS);
     return newTS;
 }
 

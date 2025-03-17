@@ -31,7 +31,7 @@ typedef struct Asm
 }Asm ;
 
 Asm*  ASM_init();
-
+void ASM_print(Asm* asmT);
 Instruction* ASM_add(Asm* asmT, char operation , int dst, int src1, int src2);
 
 #endif
