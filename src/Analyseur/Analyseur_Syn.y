@@ -1,15 +1,18 @@
-%{
+
+%{   
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "y.tab.h"
 #include "src/C/ts.h"
 #include "src/C/asm.h"
+#include "y.tab.h"
+
 
 
 
 TS * ts;
 Asm* asmT;
+int depth = 0;
 
 /* Déclarations des fonctions */
 int yylex(void);
@@ -21,13 +24,15 @@ void yyerror(const char *s);
 %union {
      int nb;
      char id[30];
+     void* instr;
 }
 
 /* to do : GESTION tID !!!!
           - add printf avec 1 seul argument (voir la doc)
           -add AND XOR OR 
           -Instruction switchcase*/
-%token tWHILE tIF tELSE tCASE tSWITCH tFOR tRETURN tDEFAULT // Mots clés
+%token tWoElse
+%token tWHILE tELSE tCASE tSWITCH tFOR tRETURN tDEFAULT // Mots clés
 %token tVOID tINT tLONG tCHAR tFLOAT tCONST tMAIN // Types
 %token tSOE tGOE tDIF tST tGT tDEQ tL_AND tL_OR // Opérateurs logiques
 %token tSLASH tSTAR tMINUS tPLUS tEQ tAND tNOT tOR tXOR// Operateurs sur nombre
@@ -35,9 +40,14 @@ void yyerror(const char *s);
 %token tERROR tPRINTF
 %token <id> tID
 %token <nb> tNB 
+%token <instr> tIF tElse
 
 %type <id> AffIDRec AffID 
-%type <nb> Operation Condition
+%type <nb> Operation
+%type <instr> If OptElse
+
+%left tWoElse
+%left tELSE
 
 /* Modification des priorités */
 %left tOR tL_OR
@@ -69,7 +79,15 @@ Type : Type tSTAR
 
 
 /*Corps d'une fonction/Instruction*/
-Body : tOB IRec tCB;
+Body : tOB 
+          {
+               depth ++;
+          } 
+IRec tCB
+          {
+               TS_context_cleanup(ts);
+               depth --;
+          };
 
 IRec : I 
      | I IRec;
@@ -80,75 +98,64 @@ I : //IfElse
 //     | SwitchCase
       Declaration 
      | Affectation 
-     | tRETURN Operation tSEM 
-     | Condition tSEM; // a enlever apres avoir fait le if
+     | If
+     | tRETURN Operation tSEM ;
 
 /*Pour les conditions ( if while etc...)*/
 
 
 
-Condition : Condition tGT Condition 
+Operation : Operation tGT Operation 
                {
-                    ASM_add(asmT, SUP, ts->indice - 1, ts-> indice, 0);
+                    ASM_add(asmT, SUP, ts->indice - 1, ts-> indice,0);
                     Symbol s = TS_pop(ts);
                }
-          | Condition tST Condition 
+          | Operation tST Operation 
                {
-                    ASM_add(asmT, INF, ts->indice - 1, ts-> indice, 0);
+                    ASM_add(asmT, INF, ts->indice - 1, ts-> indice,0);
                     Symbol s = TS_pop(ts);
                }
-          | Condition tSOE Condition 
+          | Operation tSOE Operation 
                {
-                    ASM_add(asmT, SUPE, ts->indice - 1, ts-> indice, 0);
+                    ASM_add(asmT, SUPE, ts->indice - 1, ts-> indice,0);
                     Symbol s = TS_pop(ts);
                }
-          | Condition tGOE Condition 
+          | Operation tGOE Operation 
                {
-                    ASM_add(asmT, INFE, ts->indice - 1, ts-> indice, 0);
+                    ASM_add(asmT, INFE, ts->indice - 1, ts-> indice,0);
                     Symbol s = TS_pop(ts);
                }
-          | Condition tDIF Condition
+          | Operation tDIF Operation
                {
-                    ASM_add(asmT, NEQU, ts->indice - 1, ts-> indice, 0);
+                    ASM_add(asmT, NEQU, ts->indice - 1, ts-> indice,0);
                     Symbol s = TS_pop(ts);
                }
-          | Condition tDEQ Condition 
+          | Operation tDEQ Operation 
                {
-                    ASM_add(asmT, EQU, ts->indice - 1, ts-> indice, 0);
+                    ASM_add(asmT, EQU, ts->indice - 1, ts-> indice,0);
                     Symbol s = TS_pop(ts);
                }
-          | Condition tL_AND Condition 
+          | Operation tL_AND Operation 
                {
-                    ASM_add(asmT, AND, ts->indice - 1, ts-> indice, 0);
+                    ASM_add(asmT, AND, ts->indice - 1, ts-> indice,0);
                     Symbol s = TS_pop(ts);
                }
-          | Condition tL_OR Condition 
+          | Operation tL_OR Operation 
                {
-                    ASM_add(asmT, OR, ts->indice - 1, ts-> indice, 0);
+                    ASM_add(asmT, OR, ts->indice - 1, ts-> indice,0);
                     Symbol s = TS_pop(ts);
                }
-          | tNOT Condition
+          | tNOT Operation
                {
-                    ASM_add(asmT, NOT, ts->indice - 1, ts-> indice, 0);
+                    ASM_add(asmT, NOT, ts->indice - 1, ts-> indice,0);
                     Symbol s = TS_pop(ts);
                }
-          | Condition tXOR Condition 
+          | Operation tXOR Operation 
                {
-                    ASM_add(asmT, XOR, ts->indice - 1, ts-> indice, 0);
+                    ASM_add(asmT, XOR, ts->indice - 1, ts-> indice,0);
                     Symbol s = TS_pop(ts);
                }
-          | tOP Condition tCP { $$ = $2 ; }    
-          | Operation;
-
-
-
-/*Operation*/ 
-// Pour le moment focus sur les int avec mult add et soust plus tard ajouter char (concatenation...) float etc...
-// Si on complete on devrait créer un autre nom pour les type sur lesquelles on apllique des opperation pour pas les melanger avec void etc...
-
-
-
-Operation : Operation tPLUS Operation 
+          | Operation tPLUS Operation 
                {
                     ASM_add(asmT, ADD, ts->indice - 1, ts-> indice, ts->indice-1);
                     Symbol s = TS_pop(ts);
@@ -174,7 +181,7 @@ Operation : Operation tPLUS Operation
              {
                printf("%s\n", $1);
                Symbol temp = {"temp",0,TYPE_INT};
-               ts = TS_push(ts, temp);
+               ts = TS_push(ts, temp, depth);
                TS* sous_ts = TS_exist(ts, $1);
                if (index!=NULL){
                     ASM_add(asmT, COP, ts->indice, sous_ts->indice, 0);
@@ -188,9 +195,18 @@ Operation : Operation tPLUS Operation
                {
                printf("%d\n", $1);
                Symbol temp = {"temp",0,TYPE_INT};
-               ts = TS_push(ts, temp);
+               ts = TS_push(ts, temp, depth);
                ASM_add(asmT, AFC, ts->indice, $1,0);
                }
+;
+
+
+
+/*Operation*/ 
+// Pour le moment focus sur les int avec mult add et soust plus tard ajouter char (concatenation...) float etc...
+// Si on complete on devrait créer un autre nom pour les type sur lesquelles on apllique des opperation pour pas les melanger avec void etc...
+
+
 
 /* Declaration et Affection */
 Declaration : {printf("declaration: \n");}Type  DecIDRec tSEM ;
@@ -201,7 +217,7 @@ DecIDRec : DecID
 DecID : tID {Symbol s = {"",1,TYPE_INT};
           
            strcpy(s.name, $1); 
-           ts=TS_push(ts, s);
+           ts=TS_push(ts, s, depth);
            printf("%s = ", $1);
            }
            
@@ -221,7 +237,7 @@ DecID : tID {Symbol s = {"",1,TYPE_INT};
            Symbol s = {"",0,TYPE_INT};
            printf("%s \n", $1);
            strcpy(s.name, $1);
-           ts=TS_push(ts, s);
+           ts=TS_push(ts, s, depth);
           }
            ;
 
@@ -293,9 +309,41 @@ Arg : Type tID;
 
 /*=============If et Switch=============*/
 
-/*IfElse : tIF tOP Condition tCP { add JFM ; $1 = @JMF} Body 
-     | tIF tOP Condition tCP Body tELSE Body;
-*/
+If: tIF tOP Operation tCP 
+               {
+                    printf("Indice TS avant ASM_add du if : %d\n",ts->indice);
+                    Instruction* ligne = ASM_add(asmT, JMF, ts->indice, -1, 0);
+                    $1 = (void*)ligne;
+                    TS_pop(ts);
+               } 
+          Body {
+                    Instruction* inst = (Instruction*) $1;
+                    inst->addSrc1 =  asmT->last->indice + 1;
+                    printf("corps du if\n");
+               }
+               
+          OptElse {
+               printf("avant else\n\n");
+               $8 = $1;};
+
+OptElse : 
+           tELSE 
+          {    
+               printf("Avant 1er <instr>\n\n");
+               Instruction* inst = (Instruction*)$<instr>$;
+               printf("apres 1er <instr>\n\n");
+               Instruction* ligne = ASM_add(asmT,JMP,ts->indice,-1,0) ;
+               $<instr>$ = (void *)ligne ;
+               inst->addSrc1 =  asmT->last->indice + 1;
+          }
+          Body
+          {
+               Instruction* ligne = (Instruction*)$<instr>$;
+               ligne->addSrc1 =  asmT->last->indice + 1;
+          }
+
+          |{$<instr>$=NULL;}%prec tWoElse;
+
 //TODO SWITCH CASE
 
 

@@ -5,6 +5,8 @@
 
 /* declaration d'un symbol */
 
+
+
 void TS_print(TS *ts) {
     printf("TS:\n");
     while (ts) {
@@ -25,7 +27,7 @@ Symbol TS_pop(TS * ts){
     return symbol;
 }
 
-TS * TS_push(TS * ts, Symbol symbol){
+TS * TS_push(TS * ts, Symbol symbol, int depth){
     printf("push: %s\n", symbol.name);
     TS * newTS = (TS *) malloc(sizeof(TS));
     newTS->symbol = symbol;
@@ -36,6 +38,7 @@ TS * TS_push(TS * ts, Symbol symbol){
     else{
         newTS->indice = 0;
     }
+    newTS->depth = depth;
     TS_print(newTS);
     return newTS;
 }
@@ -51,3 +54,11 @@ TS*  TS_exist(TS * ts, char name[TAILLE]){
     return NULL;
 }
 
+TS* TS_context_cleanup(TS * ts){
+    TS * current = ts;
+    int depth = ts->depth-1;
+    while(current->depth > depth){
+        TS_pop(current);
+    }
+    return current;
+}

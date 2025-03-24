@@ -21,6 +21,7 @@ typedef struct TS { //Table des symboles
      Symbol symbol;
      struct TS* next;
      int indice;
+     int depth;
      
 } TS;
 
@@ -31,7 +32,10 @@ Symbol TS_pop(TS * ts);
 
 void TS_print(TS * ts);
 
-TS * TS_push(TS * TS, Symbol symbol);
+TS * TS_push(TS * TS, Symbol symbol, int depth);
 
 TS*  TS_exist(TS * TS, char name[TAILLE]);
+
+TS* TS_context_cleanup(TS * ts);
+
 #endif

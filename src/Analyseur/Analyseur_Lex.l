@@ -1,8 +1,9 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
-#include "y.tab.h"
 #include "src/C/ts.h"
+#include "y.tab.h"
+
 %}
 D [0-9]
 C [A-Za-z]
