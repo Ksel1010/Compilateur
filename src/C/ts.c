@@ -54,13 +54,14 @@ TS*  TS_exist(TS * ts, char name[TAILLE]){
     return NULL;
 }
 
-TS* TS_context_cleanup(TS * ts){
-    TS ** current = &ts;
-    int depth = ts->depth;
-    int i =0;
-    while((*current)->depth > depth){
-        TS_print(*current);
-        TS_pop(*current);
+TS* TS_context_cleanup(TS * ts, int depth){
+    printf("clean\n");
+    TS * current = ts;
+    while(current->depth > depth){
+        TS_print(current);
+        TS_pop(current);
     }
-    return *current;
+    printf("fin clean ts : \n");
+    TS_print(current);
+    return current;
 }

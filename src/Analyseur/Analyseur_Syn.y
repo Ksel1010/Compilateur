@@ -85,8 +85,9 @@ Body : tOB
           } 
 IRec tCB
           {
-               ts = TS_context_cleanup(ts);
                depth --;
+               ts = TS_context_cleanup(ts, depth);
+               
           };
 
 IRec : I 
