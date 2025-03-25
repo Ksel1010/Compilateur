@@ -10,7 +10,7 @@
 void TS_print(TS *ts) {
     printf("TS:\n");
     while (ts) {
-         printf(">> '%s' @%d\n", ts->symbol.name, ts->indice);
+         printf(">> '%s' @%d \t depth: %d\n", ts->symbol.name, ts->indice, ts->depth);
          ts = ts->next;
     }
 }
@@ -55,10 +55,12 @@ TS*  TS_exist(TS * ts, char name[TAILLE]){
 }
 
 TS* TS_context_cleanup(TS * ts){
-    TS * current = ts;
-    int depth = ts->depth-1;
-    while(current->depth > depth){
-        TS_pop(current);
+    TS ** current = &ts;
+    int depth = ts->depth;
+    int i =0;
+    while((*current)->depth > depth){
+        TS_print(*current);
+        TS_pop(*current);
     }
-    return current;
+    return *current;
 }

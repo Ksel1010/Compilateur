@@ -1,10 +1,12 @@
 int main()
 {
-    int a = 0;
+    int a = 1;
     if(a){
         a = 2;
     }
     else {
-        a = 4;
+        a = 3;
     }
+    int b = 2;
+    
 }

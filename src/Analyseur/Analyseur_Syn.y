@@ -32,7 +32,7 @@ void yyerror(const char *s);
           -add AND XOR OR 
           -Instruction switchcase*/
 %token tWoElse
-%token tWHILE tELSE tCASE tSWITCH tFOR tRETURN tDEFAULT // Mots clés
+%token tWHILE tCASE tSWITCH tFOR tRETURN tDEFAULT // Mots clés
 %token tVOID tINT tLONG tCHAR tFLOAT tCONST tMAIN // Types
 %token tSOE tGOE tDIF tST tGT tDEQ tL_AND tL_OR // Opérateurs logiques
 %token tSLASH tSTAR tMINUS tPLUS tEQ tAND tNOT tOR tXOR// Operateurs sur nombre
@@ -40,7 +40,7 @@ void yyerror(const char *s);
 %token tERROR tPRINTF
 %token <id> tID
 %token <nb> tNB 
-%token <instr> tIF tElse
+%token <instr> tIF tELSE
 
 %type <id> AffIDRec AffID 
 %type <nb> Operation
@@ -85,7 +85,7 @@ Body : tOB
           } 
 IRec tCB
           {
-               TS_context_cleanup(ts);
+               ts = TS_context_cleanup(ts);
                depth --;
           };
 
@@ -226,7 +226,6 @@ DecID : tID {Symbol s = {"",1,TYPE_INT};
            
            {
                printf("Debut operation \n");
-               //printf("Declaration ID %s \n", $1);
                TS* sous_ts = TS_exist(ts, $1);
                if(sous_ts!= NULL){
                     ASM_add(asmT, COP, sous_ts->indice, ts->indice, 0);
@@ -265,7 +264,6 @@ AffIDRec : AffID
 
 AffID : tID
          { 
-          printf("affectation ID  ligne 190 : %s \n", $1);
           Symbol s = {"",0,TYPE_INT};
           strcpy(s.name, $1); 
           printf("$1 : %s\n", $1);
@@ -311,38 +309,35 @@ Arg : Type tID;
 
 If: tIF tOP Operation tCP 
                {
-                    printf("Indice TS avant ASM_add du if : %d\n",ts->indice);
                     Instruction* ligne = ASM_add(asmT, JMF, ts->indice, -1, 0);
                     $1 = (void*)ligne;
                     TS_pop(ts);
                } 
           Body {
                     Instruction* inst = (Instruction*) $1;
-                    inst->addSrc1 =  asmT->last->indice + 1;
-                    printf("corps du if\n");
+                    inst->addSrc1 =  asmT->last->indice + 2;
+                    
                }
                
-          OptElse {
-               printf("avant else\n\n");
-               $8 = $1;};
+          OptElse ;
 
 OptElse : 
            tELSE 
-          {    
-               printf("Avant 1er <instr>\n\n");
-               Instruction* inst = (Instruction*)$<instr>$;
-               printf("apres 1er <instr>\n\n");
+          {   
                Instruction* ligne = ASM_add(asmT,JMP,ts->indice,-1,0) ;
-               $<instr>$ = (void *)ligne ;
-               inst->addSrc1 =  asmT->last->indice + 1;
+               $1 = (void *)ligne ;
+               ligne->addSrc1 =  asmT->last->indice + 1;
           }
           Body
           {
-               Instruction* ligne = (Instruction*)$<instr>$;
+               Instruction* ligne = (Instruction*)$1;
                ligne->addSrc1 =  asmT->last->indice + 1;
           }
 
-          |{$<instr>$=NULL;}%prec tWoElse;
+          |
+          {
+               ASM_add(asmT,NOP,0,0,0) ;
+          }%prec tWoElse;
 
 //TODO SWITCH CASE
 

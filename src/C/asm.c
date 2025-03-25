@@ -26,7 +26,6 @@ Instruction* ASM_next(Asm* asmT){
 }
 
 Instruction* ASM_add(Asm* asmT, char operation , int dst, int src1, int src2){
-    printf("Debut ASM_add\n");
     Instruction* inst = (Instruction*) malloc(sizeof(Instruction));
     inst -> op = operation;
     inst -> addDst = dst;
@@ -43,7 +42,6 @@ Instruction* ASM_add(Asm* asmT, char operation , int dst, int src1, int src2){
         asmT -> last -> next = inst;
         asmT -> last = inst;
     }
-    printf("impression asm \n");
     Asm* in = asmT;
     len ++;
     return inst;

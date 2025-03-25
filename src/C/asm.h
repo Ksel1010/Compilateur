@@ -24,6 +24,8 @@
 
 #define PRI 19 // print
 
+#define NOP 20 //operation vide nop
+
 typedef struct Instruction 
 {
     char op;
