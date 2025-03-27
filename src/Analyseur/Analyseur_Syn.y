@@ -8,6 +8,10 @@
 #include "y.tab.h"
 
 
+#define ANSI_COLOR_RED          "\x1b[31m"
+#define ANSI_RESET_ALL          "\x1b[0m"
+
+
 
 
 TS * ts;
@@ -32,7 +36,7 @@ void yyerror(const char *s);
           -add AND XOR OR 
           -Instruction switchcase*/
 %token tWoElse
-%token tWHILE tCASE tSWITCH tFOR tRETURN tDEFAULT // Mots clés
+%token tCASE tSWITCH tRETURN tDEFAULT // Mots clés
 %token tVOID tINT tLONG tCHAR tFLOAT tCONST tMAIN // Types
 %token tSOE tGOE tDIF tST tGT tDEQ tL_AND tL_OR // Opérateurs logiques
 %token tSLASH tSTAR tMINUS tPLUS tEQ tAND tNOT tOR tXOR// Operateurs sur nombre
@@ -40,7 +44,7 @@ void yyerror(const char *s);
 %token tERROR tPRINTF
 %token <id> tID
 %token <nb> tNB 
-%token <instr> tIF tELSE
+%token <instr> tIF tELSE tWHILE tFOR
 
 %type <id> AffIDRec AffID 
 %type <nb> Operation
@@ -94,12 +98,13 @@ IRec : I
      | I IRec;
 
 I : //IfElse
-//     | While
-//     | For 
+//     
 //     | SwitchCase
       Declaration 
      | Affectation 
      | If
+     | While
+     | For
      | tRETURN Operation tSEM ;
 
 /*Pour les conditions ( if while etc...)*/
@@ -184,11 +189,11 @@ Operation : Operation tGT Operation
                Symbol temp = {"temp",0,TYPE_INT};
                ts = TS_push(ts, temp, depth);
                TS* sous_ts = TS_exist(ts, $1);
-               if (index!=NULL){
+               if (sous_ts!=NULL){
                     ASM_add(asmT, COP, ts->indice, sous_ts->indice, 0);
                }
                else{
-                    printf("Variable %s non déclarée", $1);
+                    printf(ANSI_COLOR_RED "Variable  \" %s \"  non déclarée" ANSI_RESET_ALL , $1);
                     return 1;
                }
                }
@@ -275,7 +280,7 @@ AffID : tID
 
           }
           else{
-               printf("Variable %s non déclarée", $1);
+               printf(ANSI_COLOR_RED "Variable \" %s \" non déclarée \n" ANSI_RESET_ALL, $1);
                return 1;
           } 
           }
@@ -325,14 +330,14 @@ If: tIF tOP Operation tCP
 OptElse : 
            tELSE 
           {   
-               Instruction* ligne = ASM_add(asmT,JMP,ts->indice,-1,0) ;
+               Instruction* ligne = ASM_add(asmT,JMP,-1, 0, 0) ;
                $1 = (void *)ligne ;
                ligne->addSrc1 =  asmT->last->indice + 1;
           }
           Body
           {
                Instruction* ligne = (Instruction*)$1;
-               ligne->addSrc1 =  asmT->last->indice + 1;
+               ligne->addDst =  asmT->last->indice + 1;
           }
 
           |
@@ -343,12 +348,70 @@ OptElse :
 //TODO SWITCH CASE
 
 
-//While : tWHILE tOP Condition tCP Body;
+While : tWHILE tOP Operation tCP
+          {
+               Instruction* ligne = ASM_add(asmT, JMF, ts->indice, asmT->last->indice, 0);
+               $1 = (void*)ligne;
+               TS_pop(ts);
+          }
+          Body
+          {
+               Instruction* ligne = (Instruction*)$1;
+               ASM_add(asmT, JMP, ligne->addSrc1, 0, 0);
+               ligne->addSrc1 =  asmT->last->indice +1;
+          };
 
 //Une boucle for c'est : for (affectation ou declaration, condition d'arret, incrementation)
-//ici je prefere utilise la regle operation plutot que d'en créer une juste pour les incremation ( du genre a = a*2 / a = a+1 / a++ etc...)
-//For : tFOR tOP Affectation Condition tSEM Operation tCP Body
-//    | tFOR tOP Declaration Condition tSEM Operation tCP Body
+// c soit on fait pop de asm pour enlever AFFID afin de la mettre apres le body soit on utilise des sauts de la maniere suivante:
+/*
+     1/AFF | dec 
+     2/Op (ex: i<5)<--
+ ----3/JMF           |
+ | -------4/jmp      |
+ | |  -->7/op(ex ++) |
+ | |  | 8/jmp -------|
+ | |--|-> 5/Body
+ |    |------6/jmp
+ |
+ |---> fin du for
+
+*/
+//to do revoir le for
+For : tFOR {
+          printf("debut for\n");
+     }
+     tOP{
+          depth ++;
+     } Affectation //1/
+     {
+          printf("affectation for : \n");
+          TS_print(ts);
+     }
+     Operation //2/
+     {
+          printf("ope1 for : ts = \n");
+          TS_print(ts);
+          printf("jmf \n");
+          //3/
+          Instruction* ligne = ASM_add(asmT, JMF, ts->indice  , asmT->last->indice, 0);
+          $1 = (void*)ligne;
+          ASM_add(asmT, JMP, asmT->last->indice+4 , 0, 0);
+     }
+     tSEM AffID 
+     {
+          printf("affectation 2 for : ts = \n");
+          TS_print(ts);
+          ASM_add(asmT, JMP, asmT->last->indice-3 , 0, 0);
+     }   
+     tCP Body {
+          Instruction* ligne = (Instruction*)$1;
+          ASM_add(asmT, JMP, ligne->addSrc1+3, 0, 0);
+          ligne->addSrc1 =  asmT->last->indice +1;
+          depth--;
+          TS_context_cleanup(ts, depth);
+          
+     }
+//    | tFOR tOP Affectation Condition tSEM Operation tCP Body
 //     | tFOR tOP 
 
 

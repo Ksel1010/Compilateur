@@ -55,13 +55,23 @@ TS*  TS_exist(TS * ts, char name[TAILLE]){
 }
 
 TS* TS_context_cleanup(TS * ts, int depth){
-    printf("clean\n");
+    printf("clean depth %d\n", depth);
     TS * current = ts;
-    while(current->depth > depth){
-        TS_print(current);
-        TS_pop(current);
-    }
-    printf("fin clean ts : \n");
     TS_print(current);
-    return current;
+    if (depth != 0){
+        while(current->depth > depth){
+            TS_print(current);
+            while(current->depth > depth){
+            TS_print(current);
+            TS_pop(current);
+            }
+        }
+        printf("fin clean ts : \n");
+        TS_print(current);
+        return current;
+    }else{
+        printf("vidage  clean ts : \n");
+        return NULL;
+    }
+   
 }
