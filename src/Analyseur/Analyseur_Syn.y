@@ -395,17 +395,17 @@ For : tFOR {
           //3/
           Instruction* ligne = ASM_add(asmT, JMF, ts->indice  , asmT->last->indice, 0);
           $1 = (void*)ligne;
-          ASM_add(asmT, JMP, asmT->last->indice+4 , 0, 0);
+          ASM_add(asmT, JMP, asmT->last->indice + 7 , 0, 0);
      }
      tSEM AffID 
      {
           printf("affectation 2 for : ts = \n");
           TS_print(ts);
-          ASM_add(asmT, JMP, asmT->last->indice-3 , 0, 0);
+          ASM_add(asmT, JMP, asmT->last->indice - 8 , 0, 0);
      }   
      tCP Body {
           Instruction* ligne = (Instruction*)$1;
-          ASM_add(asmT, JMP, ligne->addSrc1+3, 0, 0);
+          ASM_add(asmT, JMP, asmT->last->indice - 6, 0, 0);
           ligne->addSrc1 =  asmT->last->indice +1;
           depth--;
           TS_context_cleanup(ts, depth);

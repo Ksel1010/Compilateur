@@ -49,10 +49,12 @@ Instruction* ASM_add(Asm* asmT, char operation , int dst, int src1, int src2){
 
 
 void ASM_print(Asm* asmT){
+    int i = 0;
     while(asmT->first != NULL){
         Instruction* inst = asmT->first;
-        printf("%d %d %d %d\n", inst->op, inst->addDst, inst->addSrc1, inst->addSrc2);
+        printf("%d : %d %d %d %d\n",i , inst->op, inst->addDst, inst->addSrc1, inst->addSrc2);
         ASM_next(asmT);
+        i++;
     }
 }
 
