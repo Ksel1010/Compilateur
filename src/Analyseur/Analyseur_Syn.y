@@ -68,6 +68,18 @@ void yyerror(const char *s);
 /*=============Élément à utiliser partout=============*/
 
 Compilateur : tINT tMAIN tOP ArgRec tCP Body;
+/*
+Compilateur : FunctionRec Main;
+
+Main : tINT tMAIN tOP ArgRec tCP Body;
+
+FunctionRec : FunctionR
+               | ;
+FunctionR : Function
+          | Function FunctionR;
+Function : tINT tID tOP ArgRec tCP Body;
+
+*/
 
 
 Type : Type tSTAR
@@ -97,8 +109,7 @@ IRec tCB
 IRec : I 
      | I IRec;
 
-I : //IfElse
-//     
+I :     
 //     | SwitchCase
       Declaration 
      | Affectation 
@@ -332,7 +343,7 @@ OptElse :
           {   
                Instruction* ligne = ASM_add(asmT,JMP,-1, 0, 0) ;
                $1 = (void *)ligne ;
-               ligne->addSrc1 =  asmT->last->indice + 1;
+               //ligne->addSrc1 =  asmT->last->indice + 1;
           }
           Body
           {
@@ -348,9 +359,12 @@ OptElse :
 //TODO SWITCH CASE
 
 
-While : tWHILE tOP Operation tCP
+While : tWHILE tOP {
+     int ligne = asmT->last->indice + 1;
+     $1 = (void*) &ligne;
+}Operation tCP
           {
-               Instruction* ligne = ASM_add(asmT, JMF, ts->indice, asmT->last->indice, 0);
+               Instruction* ligne = ASM_add(asmT, JMF, ts->indice, *((int*) $1), 0);
                $1 = (void*)ligne;
                TS_pop(ts);
           }

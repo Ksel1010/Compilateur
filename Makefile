@@ -10,7 +10,7 @@ lex:
 	- lex $(TARGETL).l
 
 yacc:
-	- yacc -v -g -d $(TARGETS).y 
+	- yacc -v -Wother -Wcounterexamples -g -d $(TARGETS).y 
 
 compile: 
 	-gcc lex.yy.c y.tab.c -o compilo.exe
