@@ -31,9 +31,8 @@ void yyerror(const char *s);
      void* instr;
 }
 
-/* to do : GESTION tID !!!!
+/* to do :
           - add printf avec 1 seul argument (voir la doc)
-          -add AND XOR OR 
           -Instruction switchcase*/
 %token tWoElse
 %token tCASE tSWITCH tRETURN tDEFAULT // Mots clés
@@ -62,33 +61,47 @@ void yyerror(const char *s);
 %left tSTAR tSLASH
 %right tNOT
 
+/*point de départ*/
 %start Compilateur
 %%
 
 /*=============Élément à utiliser partout=============*/
 
-Compilateur : tINT tMAIN tOP ArgRec tCP Body;
-/*
-Compilateur : FunctionRec Main;
-
-Main : tINT tMAIN tOP ArgRec tCP Body;
-
-FunctionRec : FunctionR
-               | ;
-FunctionR : Function
-          | Function FunctionR;
-Function : tINT tID tOP ArgRec tCP Body;
-
-*/
+// notre C simplifié sera composé que par des fonctions qui seront utilisés dans l'ordre de leur déclaration
+Compilateur : Functions ;
 
 
-Type : Type tSTAR
-     | tINT 
+/*=============Fonction=============*/
+
+Functions : Function Functions     
+          | ;
+
+
+Function : Type tID tOP ArgRec tCP Body
+          | tINT tMAIN tOP ArgRec tCP Body ;
+
+
+
+Type : tINT 
      | tVOID
      | tLONG
      | tCHAR
      | tFLOAT
-     | tCONST;
+   //  | Type tSTAR  // to do : les pointeurs
+     | tCONST
+     ;
+
+
+ArgRec : Argr
+     | ;  
+
+Argr : Arg 
+     | Arg tCOMMA Argr;
+
+Arg : Type tID;
+
+
+
 /*impression d'une valeur*/
 
 //Impression : tPRINTF tOP tID tCP tSEM;
@@ -97,11 +110,13 @@ Type : Type tSTAR
 /*Corps d'une fonction/Instruction*/
 Body : tOB 
           {
+               //profondeur de la table des symboles permet d'effacer le contexte
                depth ++;
           } 
 IRec tCB
           {
                depth --;
+               //efacer le contexte
                ts = TS_context_cleanup(ts, depth);
                
           };
@@ -118,88 +133,106 @@ I :
      | For
      | tRETURN Operation tSEM ;
 
-/*Pour les conditions ( if while etc...)*/
 
 
-
-Operation : Operation tGT Operation 
+// operation + - * / < <= > >= != == && || ^ 
+Operation : 
+          //   A > B 
+          Operation tGT Operation 
                {
                     ASM_add(asmT, SUP, ts->indice - 1, ts-> indice,0);
                     Symbol s = TS_pop(ts);
                }
+          // A < B
           | Operation tST Operation 
                {
                     ASM_add(asmT, INF, ts->indice - 1, ts-> indice,0);
                     Symbol s = TS_pop(ts);
                }
+          // A <= B
           | Operation tSOE Operation 
                {
                     ASM_add(asmT, SUPE, ts->indice - 1, ts-> indice,0);
                     Symbol s = TS_pop(ts);
                }
+          // A >= B
           | Operation tGOE Operation 
                {
                     ASM_add(asmT, INFE, ts->indice - 1, ts-> indice,0);
                     Symbol s = TS_pop(ts);
                }
+          // A != B
           | Operation tDIF Operation
                {
                     ASM_add(asmT, NEQU, ts->indice - 1, ts-> indice,0);
                     Symbol s = TS_pop(ts);
                }
+          // A == B
           | Operation tDEQ Operation 
                {
                     ASM_add(asmT, EQU, ts->indice - 1, ts-> indice,0);
                     Symbol s = TS_pop(ts);
                }
+          // A && B
           | Operation tL_AND Operation 
                {
                     ASM_add(asmT, AND, ts->indice - 1, ts-> indice,0);
                     Symbol s = TS_pop(ts);
                }
+          // A || B
           | Operation tL_OR Operation 
                {
                     ASM_add(asmT, OR, ts->indice - 1, ts-> indice,0);
                     Symbol s = TS_pop(ts);
                }
+          // ! A
           | tNOT Operation
                {
                     ASM_add(asmT, NOT, ts->indice - 1, ts-> indice,0);
                     Symbol s = TS_pop(ts);
                }
+          // A ^ B
           | Operation tXOR Operation 
                {
                     ASM_add(asmT, XOR, ts->indice - 1, ts-> indice,0);
                     Symbol s = TS_pop(ts);
                }
+          // A + B
           | Operation tPLUS Operation 
                {
                     ASM_add(asmT, ADD, ts->indice - 1, ts-> indice, ts->indice-1);
                     Symbol s = TS_pop(ts);
                }
+          // A - B
           | Operation tMINUS Operation 
                {
                     ASM_add(asmT, SOU, ts->indice - 1, ts-> indice, ts->indice-1);
                     Symbol s = TS_pop(ts);
                }
+          // A * B
           | Operation tSTAR Operation 
                {
                     ASM_add(asmT, MUL, ts->indice - 1, ts-> indice, ts->indice-1);
                     Symbol s = TS_pop(ts);
                }
+          // A / B
           | Operation tSLASH Operation 
                {
                     ASM_add(asmT, DIV, ts->indice - 1, ts-> indice, ts->indice-1);
                     Symbol s = TS_pop(ts);
                }
+          // (op)
           | tOP Operation tCP { $$ = $2 ; }
+          // A 
           | tID
           
              {
                printf("%s\n", $1);
+               // création variable temporaire
                Symbol temp = {"temp",0,TYPE_INT};
                ts = TS_push(ts, temp, depth);
                TS* sous_ts = TS_exist(ts, $1);
+               // verification de l'existance de la variable dans la table des symboles
                if (sous_ts!=NULL){
                     ASM_add(asmT, COP, ts->indice, sous_ts->indice, 0);
                }
@@ -208,8 +241,10 @@ Operation : Operation tGT Operation
                     return 1;
                }
                }
+          // value
           | tNB 
                {
+               // création variable temporaire et lui affecter nb
                printf("%d\n", $1);
                Symbol temp = {"temp",0,TYPE_INT};
                ts = TS_push(ts, temp, depth);
@@ -219,20 +254,16 @@ Operation : Operation tGT Operation
 
 
 
-/*Operation*/ 
-// Pour le moment focus sur les int avec mult add et soust plus tard ajouter char (concatenation...) float etc...
-// Si on complete on devrait créer un autre nom pour les type sur lesquelles on apllique des opperation pour pas les melanger avec void etc...
 
-
-
-/* Declaration et Affection */
+/* ======== Declaration  ========= */
 Declaration : {printf("declaration: \n");}Type  DecIDRec tSEM ;
 
 DecIDRec : DecID
           | DecID tCOMMA{printf(",\n");} DecIDRec;
 
-DecID : tID {Symbol s = {"",1,TYPE_INT};
-          
+DecID : tID 
+          // ajout a la table des symboles
+          {Symbol s = {"",1,TYPE_INT};
            strcpy(s.name, $1); 
            ts=TS_push(ts, s, depth);
            printf("%s = ", $1);
@@ -244,12 +275,20 @@ DecID : tID {Symbol s = {"",1,TYPE_INT};
            {
                printf("Debut operation \n");
                TS* sous_ts = TS_exist(ts, $1);
+               // verification que l'ajout a la table est bien fait
                if(sous_ts!= NULL){
+                    //copy la valeur temporaire (faite par Operation) dans id
                     ASM_add(asmT, COP, sous_ts->indice, ts->indice, 0);
+                    // pop la variable temporaire
                     Symbol s = TS_pop(ts);
+               }
+               else {
+                    printf(ANSI_COLOR_RED "Variable  \" %s \"  non déclarée" ANSI_RESET_ALL , $1);
+                    return 1;
                }
            }
      | tID {
+          // rajout a la table des symboles 
            Symbol s = {"",0,TYPE_INT};
            printf("%s \n", $1);
            strcpy(s.name, $1);
@@ -258,25 +297,14 @@ DecID : tID {Symbol s = {"",1,TYPE_INT};
            ;
 
 
-
+/* ======== Affectation ========== */
 Affectation : AffIDRec tSEM 
           {
                printf("affectation %s \n", $1);
           };
 
 AffIDRec : AffID 
-          
-          |AffID tCOMMA 
-     /*     {
-          printf("affectation IDREC-2 %s \n", $1);
-          TS * sous_ts = TS_exist(ts, $1);
-          if(sous_ts != NULL){
-               ASM_add(asmT, COP, sous_ts->indice, ts->indice, 0);
-               TS_pop(ts);
-          }
-          //strcpy($$, $1);
-          } */
-          AffIDRec;
+          |AffID tCOMMA AffIDRec;
           
 
 AffID : tID
@@ -284,6 +312,7 @@ AffID : tID
           Symbol s = {"",0,TYPE_INT};
           strcpy(s.name, $1); 
           printf("$1 : %s\n", $1);
+          //verification de l'existence de la var dans la table des symboles
           TS * sous_ts = TS_exist(ts, s.name);
           TS_print(ts);
           if(sous_ts != NULL){
@@ -291,6 +320,7 @@ AffID : tID
 
           }
           else{
+               // variable non déclarée
                printf(ANSI_COLOR_RED "Variable \" %s \" non déclarée \n" ANSI_RESET_ALL, $1);
                return 1;
           } 
@@ -298,40 +328,42 @@ AffID : tID
           tEQ Operation
 
           {
+               //copy la var temp dans id 
                TS * sous_ts = TS_exist(ts, $1);
                if(sous_ts != NULL){
                     ASM_add(asmT, COP, sous_ts->indice, ts->indice, 0);
                     Symbol s  = TS_pop(ts);
                     printf("symbol : %s\n", s.name);
                }
+               else{
+               // variable non déclarée
+               printf(ANSI_COLOR_RED "Variable \" %s \" non déclarée \n" ANSI_RESET_ALL, $1);
+               return 1;
+          } 
           }
           ;
 
-
-/*=============Fonction=============*/
-
-//Fonction : Type  tID  tOP ArgRec tCP Body;
-
-ArgRec : Argr
-     | ;  
-
-Argr : Arg 
-     | Arg tCOMMA Argr;
-
-Arg : Type tID;
 
 
 
 /*=============If et Switch=============*/
 
 If: tIF tOP Operation tCP 
-               {
+               {    // jump if  var temporaire de operation is false à une addresse indeterminee -1 pour le moment
                     Instruction* ligne = ASM_add(asmT, JMF, ts->indice, -1, 0);
+                    // stocker l'instruction dans le premier token (tIF)
                     $1 = (void*)ligne;
+                    // pop la variable temporaire de operation
                     TS_pop(ts);
                } 
           Body {
+                    // on récupère le premier token (instruction)
                     Instruction* inst = (Instruction*) $1;
+                    //on rajoute le saut à l @ de asm last + 2 
+                    /*
+                         - 1 ligne pour prendre en compte la derniere instruction du body
+                         - 1 ligne pour le eviter jmp avant le else
+                    */
                     inst->addSrc1 =  asmT->last->indice + 2;
                     
                }
@@ -341,35 +373,45 @@ If: tIF tOP Operation tCP
 OptElse : 
            tELSE 
           {   
+               // dans le cas d'un else on fait un jmp vers une @ indeterminée pour le moment afin de pouvoir eviter ce bloc
                Instruction* ligne = ASM_add(asmT,JMP,-1, 0, 0) ;
                $1 = (void *)ligne ;
-               //ligne->addSrc1 =  asmT->last->indice + 1;
           }
           Body
           {
+               // recupere instruction et mettre addresse = last + 1 afin de passer a l'instruction qui suit le body
                Instruction* ligne = (Instruction*)$1;
                ligne->addDst =  asmT->last->indice + 1;
           }
 
           |
           {
+               // en absence du else on rajoute une operation nop (1 cycle perdu :'( ) afin de garder la cohérance du jmf
                ASM_add(asmT,NOP,0,0,0) ;
           }%prec tWoElse;
 
+
+
 //TODO SWITCH CASE
 
+/*==========While============*/
 
 While : tWHILE tOP {
+     // on sauvegarde l'@ de operation pour le jmf plus tard
      int ligne = asmT->last->indice + 1;
      $1 = (void*) &ligne;
 }Operation tCP
           {
+               // on jump if la var temp de operation is false à une @ indéterminé mais on enregistre
+               // l'@ ou commence operation (enregistree auparavant) pour pouvoir la recuperer afin d'y revenir apre body
                Instruction* ligne = ASM_add(asmT, JMF, ts->indice, *((int*) $1), 0);
                $1 = (void*)ligne;
                TS_pop(ts);
           }
           Body
           {
+               // recuperer instruction afin de recuperer la destination du jmp fin body et changer la valeur 
+               // de jmf à la fin du body + 1 pour executer la premiere ligne apres le body
                Instruction* ligne = (Instruction*)$1;
                ASM_add(asmT, JMP, ligne->addSrc1, 0, 0);
                ligne->addSrc1 =  asmT->last->indice +1;
@@ -431,13 +473,6 @@ For : tFOR {
 
 
 
-/*
-Remarque :
-     - Comment faire pour ajouter une regle pour les tableaux ? => tID tSOB tNB tSCB = tNB ou tOB (tNb tSC)* tCB
-Question :
-     - Est ce que c'est le role de l'analyseur syntaxique de detecter qu'une fonction autre que void doit avoir un return dans le body 
- ou ou est ce que c'est a l'analyseur semantique 
-*/
 %%
 int main(void)
 {
