@@ -1,10 +1,17 @@
-%option noyywrap
-D   [0-9]
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include "src/C/ts.h"
+#include "y.tab.h"
+
+%}
+D [0-9]
 C [A-Za-z]
 
 %%
 
-%{Mots clés du language%}
+printf              return tPRINTF;
+main             	return tMAIN; 
 while             	return tWHILE;
 if                	return tIF;
 else              	return tELSE;
@@ -17,36 +24,32 @@ long              	return tLONG;
 char              	return tCHAR;
 float             	return tFLOAT;
 const             	return tCONST;
-return            	return tRETURN;
-default 		  	return tDEFAULT;
+return              return tRETURN;
+default             return tDEFAULT;
 
 
-%{Symboles de comparaison %}
-"<="			  	return tSOE;
-">="			  	return tGOE;
-"!="		      	return tDIF;
-"<"               	return tST;
-">"               	return tGT;
-"=="              	return tDEQ;
-"&&"			  	return tL_AND;
-"||"			  	return tL_OR;
+"<="                return tSOE;
+">="                return tGOE;
+"!="                return tDIF;
+"<"                 return tST;
+">"                 return tGT;
+"=="                return tDEQ;
+"&&"                return tL_AND;
+"||"                return tL_OR;
 
-%{Opérateurs %} 
-%{Peut etre ajouter  les ++ += ...%}
+
 "/"               	return tSLASH;
 "*"               	return tSTAR;
 "-"               	return tMINUS;
 "+"               	return tPLUS;
 "="               	return tEQ;
 
-%{Opérateurs bit à bit %}
-"&"				  	return tAND;
-"!"				  	return tNOT;
-"|"				  	return tOR;
-"^" 			  	return tXOR
+"&"                 return tAND;
+"!"                 return tNOT;
+"|"                 return tOR;
+"^"                 return tXOR;
 
 
-%{Ponctuations %}
 "_"               	return tUNDER;
 ","               	return tCOMMA;
 "["               	return tSOB;
@@ -56,20 +59,17 @@ default 		  	return tDEFAULT;
 ";"               	return tSEM;
 "("             	return tOP;
 ")"               	return tCP;
-":"				  	return tCOLON
+":"                 return tCOLON;
 
-%{Token Générales%}
-{D}+              	return tNB[%s], yytext;
-{C}({C}|{D}|"_")* 	return tID[%s], yytext;
+{D}+              	{yylval.nb = atoi(yytext); return tNB ;}
+{C}({C}|{D}|"_")* 	{strcpy(yylval.id, yytext); return tID;}
 
-%{Caractères speciaux%}
 " "               	{ }
 \t                	{ }
 \n                	{ }
-.                 	{ return ERROR\n; exit(2); }
+.                 	{ return tERROR;  }
 
 %%
-
-void main(void) {
-	yylex();
+int yywrap(void) {
+    return 1;
 }
