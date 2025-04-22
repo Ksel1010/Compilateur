@@ -26,6 +26,11 @@
 
 #define NOP 20 //operation vide nop
 
+#define CALL 21
+#define RET 22
+#define PUSH 23
+#define POP 24
+
 typedef struct Instruction 
 {
     char op;
@@ -46,5 +51,7 @@ Asm*  ASM_init();
 void ASM_print(Asm* asmT);
 Instruction* ASM_add(Asm* asmT, char operation , int dst, int src1, int src2);
 Instruction* ASM_get(Asm* asmT, int indice);
+void ASM_freeAll(Asm* asmT) ;
+
 
 #endif
