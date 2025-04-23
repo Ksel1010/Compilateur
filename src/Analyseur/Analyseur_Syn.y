@@ -49,7 +49,7 @@ void yyerror(const char *s);
 %token <instr> tIF tELSE tWHILE tFOR
 
 %type <id> AffIDRec AffID 
-%type <nb> Operation Type IDs IDRec
+%type <nb> Operation Type IDs IDRec FunctionCall
 %type <instr> If OptElse
 
 %left tWoElse
@@ -101,13 +101,25 @@ Function : tINT tMAIN
                }else{
                     FT_push(funcT, $2, asmT->last->indice+1);
                }
-               Symbol ret_addr = {"return_addr",1,TYPE_INT};
-               ts = TS_push(ts, ret_addr, depth);
                Symbol ret_val = {"return_val",1,TYPE_INT};
                ts = TS_push(ts, ret_val, depth);
           
 } 
-          tOP ArgRec tCP Body
+          tOP ArgRec tCP {
+               Symbol ret_addr = {"return_addr",1,TYPE_INT};
+               ts = TS_push(ts, ret_addr, depth);
+          }
+          /**
+          * stack weill be :
+                    | return address
+                    | param n
+                    | param n-1
+                    | ...
+                    | param 0 
+                    | return value 
+                   \0/
+          */
+               Body
           {
                ASM_add(asmT, RET, 0, 0, 0);
                printf("dans test \n\n\n je verifie ts\n");
@@ -206,6 +218,11 @@ FunctionCall:
                          ASM_add(asmT, PUSH, stack_before_push_params, 0, 0);
                          ASM_add(asmT, CALL, function_addr, 0, 0);
                          ASM_add(asmT, POP, stack_before_push_params, 0, 0);
+                         //effacer l'adresse de retour et les parametres a la fin de l'appel (garder l'adresse de retour)
+                         for(int i=0 ;i < $4 +1 ; i++){
+                              // $4 est egal au nombre de parametres et on lui ajoute 1 pour l'adresse de retour deja utilise lors du RET )
+                              TS_pop(ts);
+                         }
                     }
                };
 IDs: tID {
@@ -353,6 +370,7 @@ Operation :
                ts = TS_push(ts, temp, depth);
                ASM_add(asmT, AFC, ts->indice, $1,0);
                }
+          | FunctionCall 
 ;
 
 
