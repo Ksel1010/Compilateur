@@ -38,4 +38,6 @@ TS*  TS_exist(TS * TS, char name[TAILLE]);
 
 TS* TS_context_cleanup(TS * ts, int depth);
 
+void TS_free(TS *ts);
+
 #endif

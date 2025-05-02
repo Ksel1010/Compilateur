@@ -66,3 +66,17 @@ Instruction* ASM_get(Asm* asmT, int index){
     }
     return inst;
 }
+void ASM_freeAll(Asm* asmT) {
+    if (asmT == NULL) {
+        return;
+    }
+    
+    Instruction* current = asmT->first;
+    while (current != NULL) {
+        Instruction* next = current->next;
+        free(current);
+        current = next;
+    }
+    
+    free(asmT);
+}

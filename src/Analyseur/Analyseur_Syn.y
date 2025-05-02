@@ -5,6 +5,8 @@
 #include <string.h>
 #include "src/C/ts.h"
 #include "src/C/asm.h"
+#include "src/C/functions.h"
+
 #include "y.tab.h"
 
 
@@ -16,6 +18,7 @@
 
 TS * ts;
 Asm* asmT;
+FuncT* funcT;
 int depth = 0;
 
 /* Déclarations des fonctions */
@@ -46,7 +49,7 @@ void yyerror(const char *s);
 %token <instr> tIF tELSE tWHILE tFOR
 
 %type <id> AffIDRec AffID 
-%type <nb> Operation
+%type <nb> Operation Type IDs IDRec FunctionCall
 %type <instr> If OptElse
 
 %left tWoElse
@@ -68,7 +71,10 @@ void yyerror(const char *s);
 /*=============Élément à utiliser partout=============*/
 
 // notre C simplifié sera composé que par des fonctions qui seront utilisés dans l'ordre de leur déclaration
-Compilateur : Functions ;
+Compilateur : {
+                    ASM_add(asmT, JMP, -1 , 0 , 0);//in order to jump to the main function
+               }
+               Functions ;
 
 
 /*=============Fonction=============*/
@@ -77,18 +83,59 @@ Functions : Function Functions
           | ;
 
 
-Function : Type tID tOP ArgRec tCP Body
-          | tINT tMAIN tOP ArgRec tCP Body ;
+Function : tINT tMAIN
+{
+          if(asmT->last==NULL){
+               FT_main(funcT, 0);
+          }else{
+               FT_main(funcT, asmT->last->indice+1);
+          }
+          asmT->first->addDst = funcT->main;
+         
+}
+          tOP ArgRec tCP Body 
+          | Type tID
+{              
+               if (asmT->last==NULL){
+                    FT_push(funcT, $2, 0);
+               }else{
+                    FT_push(funcT, $2, asmT->last->indice+1);
+               }
+               Symbol ret_val = {"return_val",1,TYPE_INT};
+               ts = TS_push(ts, ret_val, depth);
+          
+} 
+          tOP ArgRec tCP {
+               Symbol ret_addr = {"return_addr",1,TYPE_INT};
+               ts = TS_push(ts, ret_addr, depth);
+          }
+          /**
+          * stack weill be :
+                    | return address
+                    | param n
+                    | param n-1
+                    | ...
+                    | param 0 
+                    | return value 
+                   \0/
+          */
+               Body
+          {
+               ASM_add(asmT, RET, 0, 0, 0);
+               printf("dans test \n\n\n je verifie ts\n");
+               TS_print(ts);
+               printf("\n\n\n");
+          };
 
 
 
-Type : tINT 
-     | tVOID
-     | tLONG
-     | tCHAR
-     | tFLOAT
+Type : tINT {$$=1;}
+     | tVOID {$$=2;}
+     | tLONG {$$=3;}
+     | tCHAR {$$=4;}
+     | tFLOAT {$$=5;}
    //  | Type tSTAR  // to do : les pointeurs
-     | tCONST
+     | tCONST {$$=6;}
      ;
 
 
@@ -98,7 +145,19 @@ ArgRec : Argr
 Argr : Arg 
      | Arg tCOMMA Argr;
 
-Arg : Type tID;
+Arg : Type tID {
+     Symbol s = {"",1,TYPE_INT};
+     switch($1){
+          case 1:
+               s.type = TYPE_INT;
+          break;
+          case 2:
+               s.type = TYPE_VOID;
+          break;
+     }
+     strcpy(s.name, $2); 
+     ts=TS_push(ts, s, depth);
+};
 
 
 
@@ -126,14 +185,75 @@ IRec : I
 
 I :     
 //     | SwitchCase
-      Declaration 
+     FunctionCall tSEM
+     | Declaration 
      | Affectation 
      | If
      | While
      | For
-     | tRETURN Operation tSEM ;
+     | tRETURN Operation tSEM {
+          ASM_add(asmT, COP, 0, ts->indice, 0);
+          TS_pop(ts);
+     };
 
 
+//FunctionCall  f() | f(a) | f(a, b...)
+FunctionCall: 
+               tID tOP {
+                    printf("Function Call\n");
+                    Symbol ret_val = {"return_value",0,TYPE_INT};
+                    ts = TS_push(ts, ret_val, depth);
+               }IDs  tCP{
+                    Symbol ret_addr = {"return_adress",0 ,TYPE_INT};
+                    ts = TS_push(ts, ret_addr, depth);
+                    int function_addr = FT_get(funcT, $1);
+                    if(function_addr == -1){
+                         // function not found
+                         printf(ANSI_COLOR_RED "Function  \" %s \"  not declared previously" ANSI_RESET_ALL , $1);
+
+                    }else{
+                         printf("\n\n\nnb of parameters : %d\n\n\n", $4);
+
+                         int stack_before_push_params = ts->indice+1  - $4 - 2 ;// $4= nb of parameters and 1 for @ret and 1 for valret
+                         ASM_add(asmT, PUSH, stack_before_push_params, 0, 0);
+                         ASM_add(asmT, CALL, function_addr, 0, 0);
+                         ASM_add(asmT, POP, stack_before_push_params, 0, 0);
+                         //effacer l'adresse de retour et les parametres a la fin de l'appel (garder l'adresse de retour)
+                         for(int i=0 ;i < $4 +1 ; i++){
+                              // $4 est egal au nombre de parametres et on lui ajoute 1 pour l'adresse de retour deja utilise lors du RET )
+                              TS_pop(ts);
+                         }
+                    }
+               };
+IDs: tID {
+               Symbol param = {"param",0,TYPE_INT};
+               ts = TS_push(ts, param, depth);
+               TS* sous_ts = TS_exist(ts, $1);
+               // verification de l'existance de la variable dans la table des symboles
+               if (sous_ts!=NULL){
+                    ASM_add(asmT, COP, ts->indice, sous_ts->indice, 0);
+               }
+               else{
+                    printf(ANSI_COLOR_RED "Variable  \" %s \"  non déclarée" ANSI_RESET_ALL , $1);
+                    return 1;
+               }
+          }IDRec{$$ = 1+ $3;}
+     |{$$ = 0;}
+IDRec: tCOMMA tID
+          {
+               Symbol param = {"param",0,TYPE_INT};
+               ts = TS_push(ts, param, depth);
+               TS* sous_ts = TS_exist(ts, $2);
+               // verification de l'existance de la variable dans la table des symboles
+               if (sous_ts!=NULL){
+                    ASM_add(asmT, COP, ts->indice, sous_ts->indice, 0);
+               }
+               else{
+                    printf(ANSI_COLOR_RED "Variable  \" %s \"  non déclarée" ANSI_RESET_ALL , $2);
+                    return 1;
+               }
+          }IDRec {$$ = $4 +1;}
+     |{$$ = 0;};
 
 // operation + - * / < <= > >= != == && || ^ 
 Operation : 
@@ -250,6 +370,7 @@ Operation :
                ts = TS_push(ts, temp, depth);
                ASM_add(asmT, AFC, ts->indice, $1,0);
                }
+          | FunctionCall 
 ;
 
 
@@ -478,10 +599,18 @@ int main(void)
 {
      ts = TS_init();
      asmT = ASM_init();
+     funcT = FT_init();
      yyparse();
+
+     printf("\n\nRESUMEE\n\n");
      ASM_print(asmT);
      TS_print(ts);
 
+
+     TS_free(ts);
+     ASM_freeAll(asmT);
+     
+     FT_freeAll(funcT);
      return 0;
 }
 

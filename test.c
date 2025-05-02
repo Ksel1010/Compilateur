@@ -1,13 +1,13 @@
-int main()
-{
-    int a  = 7;
-    int b = 0;
-    int c = 0;
+int  add(int a,  int b, int g){
+    a = a+b;
+    int c = 7;
+    return a;
+}
 
-    while ( a==0){
-        a = 5;
-    }
+int main () {
+    int c  = 7;
+    int d = 8;
     
-
-    c = 9;
+    c = add(c, d, c) + 2;
+    int e = 9;
 }
