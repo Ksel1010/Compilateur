@@ -52,8 +52,13 @@ signal LDR : std_logic_vector(7 downto 0) := x"08";
 
 begin
 
-ROM(0) <= ADD & x"01" & x"03" & x"07"; 
-
+--ROM(0) <= ADD & x"01" & x"03" & x"07"; 
+ROM(1) <= AFC & x"01" & x"09" & x"00";  -- 9 à l'adresse 1
+ROM(2) <= AFC & x"02" & x"07" & x"00";  -- 7 a l'adresse 2
+ROM(3) <= AFC & x"03" & x"06" & x"00";  -- 6 a l'adresse 3
+ROM(4) <= ADD & x"01" & x"01" & x"02";  -- mettre à l'adresse 0:  @1+@2 = 7+9 = 16
+ROM(5) <= SOU & x"01" & x"01" & x"03";  -- je soustrais 3 de 1 => 16 - 6 =10 et stocker dans 1
+ROM(6) <= AFC & x"04" & x"05" & x"00";  -- 5 à l'adresse 4
 process(CLK)
     begin
         if (CLK='1') then 

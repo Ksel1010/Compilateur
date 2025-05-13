@@ -65,11 +65,29 @@ end process;
 
 process
 begin
-RST <= '0';
-wait for 50 ns;
+
+--RST <= '1';
+--INS <= x"00";
+--wait for 200 ns;
 RST <= '1';
-INS <= x"00";
-wait for 100 ns;
+INS <= x"01";
+wait for 250 ns;
+INS <= x"02";
+wait for 250 ns;
+INS <= x"03";
+wait for 250 ns;
+INS <= x"04";
+wait for 250 ns;
+INS <= x"05";
+wait for 250 ns;
+INS <= x"06";
+wait for 250 ns;
+INS <= x"06";
+wait for 250 ns;
+INS <= x"06";
+wait for 250 ns;
+INS <= x"06";
+wait for 250 ns;
 
 end process;
 

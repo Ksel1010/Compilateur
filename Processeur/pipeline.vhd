@@ -171,7 +171,7 @@ OP_IN => DI_OP,
 DEST_IN  =>DI_DST,
 SRC1_IN  =>MUX_BDR,
 SRC2_IN  =>QB_signal,
-OP_OUT=>EX_DST,
+OP_OUT=>EX_OP,
 DEST_OUT =>EX_DST,
 SRC1_OUT =>EX_SRC1,
 SRC2_OUT =>EX_SRC2
@@ -180,7 +180,7 @@ SRC2_OUT =>EX_SRC2
 ual:ALU port map(
 A=> EX_src1,
 B=> EX_src2,
-Ctrl_Alu =>(others =>'0'),
+Ctrl_Alu =>LC_EX,
 S=> S_ALU
 );
 
@@ -188,9 +188,9 @@ ex_mem: pipe port map(
 CLK=>CLK,
 OP_IN => EX_OP,
 DEST_IN  =>EX_DST,
-SRC1_IN  =>EX_SRC1,
+SRC1_IN  =>MUX_ALU,
 SRC2_IN  =>EX_SRC2,
-OP_OUT=>MEM_DST,
+OP_OUT=>MEM_OP,
 DEST_OUT =>MEM_DST,
 SRC1_OUT =>MEM_SRC1
 );
@@ -210,22 +210,22 @@ OP_IN => MEM_OP,
 DEST_IN  =>MEM_DST,
 SRC1_IN  =>MEM_SRC1,
 SRC2_IN => (others=>'0'),
-OP_OUT=>RE_DST,
+OP_OUT=>RE_OP,
 DEST_OUT =>RE_DST,
 SRC1_OUT =>RE_SRC1
 );
 
 LC_RE <= '0' when (RE_OP>=x"08" ) else '1';
 
-LC_EX <= "000" when EX_op >= x"3" else EX_op (2 downto 0);
+LC_EX <= "000" when EX_op > x"3" else EX_op (2 downto 0);
 
 LC_MEM <= '1' when MEM_OP = x"8" else '0';
 
-MUX_BDR <= QA_signal when DI_OP = x"05" else DI_src1; -- COP operation
+MUX_BDR <= QA_signal when DI_OP <= x"05" else DI_src1; -- COP operation
 
 MUX_ALU <= S_ALU when (EX_OP = x"01" or EX_OP = x"2" or EX_OP = x"3")  else EX_src1; -- add mul, sou
 
-MUX_MEM_LOAD <= MEM_src1 when MEM_op =x"8"  else MEM_OUT;
+MUX_MEM_LOAD <= MEM_OUT when MEM_op =x"8"  else MEM_src1;
 
 MUX_MEM_STR <= MEM_DST when MEM_OP=x"7" else MEM_src1;
 
