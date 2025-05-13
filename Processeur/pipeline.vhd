@@ -33,7 +33,8 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 entity pipeline is
     Port ( RST : in STD_LOGIC;
-    CLK : in STD_LOGIC);
+    CLK : in STD_LOGIC;
+    IP : in STD_LOGIC_VECTOR (7 downto 0));
 
 end pipeline;
 
@@ -42,7 +43,7 @@ architecture Behavioral of pipeline is
 component Instr_MEM is
     Port ( ADR : in STD_LOGIC_VECTOR (7 downto 0);
            CLK : in STD_LOGIC;
-           OUTPUT : out STD_LOGIC_VECTOR (32 downto 0));
+           OUTPUT : out STD_LOGIC_VECTOR (31 downto 0));
 end component Instr_MEM;
 
 component pipe is
@@ -96,7 +97,6 @@ Port ( ADR : in STD_LOGIC_VECTOR (7 downto 0);
 end component Data_MEM;
 
 signal signal_out_mem_instr: STD_LOGIC_VECTOR (31 downto 0) := (others=>'0') ; -- signal de sortie de la memoire d'instruction
-signal IP : STD_LOGIC_VECTOR (7 downto 0) := (others=>'0') ; -- pointeur d'instruction
 
 signal DI_DST : STD_LOGIC_VECTOR (7 downto 0) := (others=>'0') ; -- signal A entre LIDI et DIEX => signal de destination
 signal DI_OP : STD_LOGIC_VECTOR (7 downto 0) := (others=>'0') ; -- signal OP entre LIDI et DIEX => operande
@@ -116,8 +116,21 @@ signal RE_DST : STD_LOGIC_VECTOR (7 downto 0) := (others=>'0') ; -- signal A ent
 signal RE_OP : STD_LOGIC_VECTOR (7 downto 0) := (others=>'0') ; -- signal OP entre MEMRE et le retour => operande
 signal RE_SRC1 : STD_LOGIC_VECTOR (7 downto 0) := (others=>'0') ; -- signal B entre MEMRE et le retour => source 1
 
+signal MEM_OUT: STD_LOGIC_VECTOR (7 downto 0);
 
+signal S_ALU: STD_LOGIC_VECTOR (7 downto 0);
 
+signal QA_signal: STD_LOGIC_VECTOR (7 downto 0);
+signal QB_signal: STD_LOGIC_VECTOR (7 downto 0);
+
+signal MUX_BDR: STD_LOGIC_VECTOR (7 downto 0);
+signal MUX_ALU: STD_LOGIC_VECTOR (7 downto 0);
+signal MUX_MEM_LOAD: STD_LOGIC_VECTOR (7 downto 0);
+signal MUX_MEM_STR: STD_LOGIC_VECTOR (7 downto 0);
+
+signal LC_RE : STD_LOGIC;
+signal LC_EX : STD_LOGIC_VECTOR (2 downto 0);
+signal LC_MEM : STD_LOGIC;
 
 begin
 
@@ -141,23 +154,23 @@ SRC2_OUT =>DI_SRC2
 
 banc_de_registres : banc_registres port map(
 
-A =>(others=>'0'),
-B => (others=>'0'),
-RST =>'0',
+A =>DI_src1 (3 downto 0),
+B => DI_src2 (3 downto 0),
+RST =>RST,
 CLK =>CLK,
 Wb => RE_DST(3 downto 0),
-W => '0',  --- to link with LC
-DATA=> RE_SRC1
---QA=>
---QB=>
+W => LC_RE,
+DATA=> RE_SRC1,
+QA=> QA_signal,
+QB=> QB_signal
 ); 
 
 di_ex : pipe port map(
 CLK=>CLK,
 OP_IN => DI_OP,
 DEST_IN  =>DI_DST,
-SRC1_IN  =>DI_SRC1,
-SRC2_IN  =>DI_SRC2,
+SRC1_IN  =>MUX_BDR,
+SRC2_IN  =>QB_signal,
 OP_OUT=>EX_DST,
 DEST_OUT =>EX_DST,
 SRC1_OUT =>EX_SRC1,
@@ -165,37 +178,58 @@ SRC2_OUT =>EX_SRC2
 );
 
 ual:ALU port map(
+A=> EX_src1,
+B=> EX_src2,
+Ctrl_Alu =>(others =>'0'),
+S=> S_ALU
 );
 
-data_mem : Data_MEM port map(
-
+ex_mem: pipe port map(
+CLK=>CLK,
+OP_IN => EX_OP,
+DEST_IN  =>EX_DST,
+SRC1_IN  =>EX_SRC1,
+SRC2_IN  =>EX_SRC2,
+OP_OUT=>MEM_DST,
+DEST_OUT =>MEM_DST,
+SRC1_OUT =>MEM_SRC1
 );
 
-process (CLK)
-    begin
-    if (CLK='1') then 
+data : Data_MEM port map(
+CLK=>CLK,
+ADR => MUX_MEM_STR, 
+INPUT => MEM_src1,
+RW => LC_MEM,
+RST => RST,
+OUTPUT => MEM_OUT
+);
 
-    end if;
-    end process;
+mem_re : pipe port map(
+CLK=>CLK,
+OP_IN => MEM_OP,
+DEST_IN  =>MEM_DST,
+SRC1_IN  =>MEM_SRC1,
+SRC2_IN => (others=>'0'),
+OP_OUT=>RE_DST,
+DEST_OUT =>RE_DST,
+SRC1_OUT =>RE_SRC1
+);
 
+LC_RE <= '0' when (RE_OP>=x"08" ) else '1';
 
-process (CLK)
-    begin
-    end process;
-    
-process (CLK)
-    begin
-    end process;
-    
-    
-process (CLK)
-    begin
-    end process;
-        
-        
-process (CLK)
-    begin
-    end process;    
+LC_EX <= "000" when EX_op >= x"3" else EX_op (2 downto 0);
+
+LC_MEM <= '1' when MEM_OP = x"8" else '0';
+
+MUX_BDR <= QA_signal when DI_OP = x"05" else DI_src1; -- COP operation
+
+MUX_ALU <= S_ALU when (EX_OP = x"01" or EX_OP = x"2" or EX_OP = x"3")  else EX_src1; -- add mul, sou
+
+MUX_MEM_LOAD <= MEM_src1 when MEM_op =x"8"  else MEM_OUT;
+
+MUX_MEM_STR <= MEM_DST when MEM_OP=x"7" else MEM_src1;
+
+  
 
 
 

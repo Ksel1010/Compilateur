@@ -2,9 +2,9 @@
 -- Company: 
 -- Engineer: 
 -- 
--- Create Date: 05/02/2025 10:25:13 AM
+-- Create Date: 05/13/2025 09:34:35 AM
 -- Design Name: 
--- Module Name: pipe - Behavioral
+-- Module Name: TEST_pipeline - Behavioral
 -- Project Name: 
 -- Target Devices: 
 -- Tool Versions: 
@@ -31,29 +31,49 @@ use IEEE.STD_LOGIC_1164.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
-entity pipe is
+entity TEST_pipeline is
+--  Port ( );
+end TEST_pipeline;
+
+architecture Behavioral of TEST_pipeline is
+component pipeline
     Port ( CLK : in STD_LOGIC;
-           OP_IN : in STD_LOGIC_VECTOR (7 downto 0);
-           DEST_IN : in STD_LOGIC_VECTOR (7 downto 0);
-           SRC1_IN : in STD_LOGIC_VECTOR (7 downto 0);
-           SRC2_IN : in STD_LOGIC_VECTOR (7 downto 0);
-           OP_OUT : out STD_LOGIC_VECTOR (7 downto 0);
-           DEST_OUT : out STD_LOGIC_VECTOR (7 downto 0);
-           SRC1_OUT : out STD_LOGIC_VECTOR (7 downto 0);
-           SRC2_OUT : out STD_LOGIC_VECTOR (7 downto 0));
-end pipe;
+           RST : in STD_LOGIC;
+           IP : in STD_LOGIC_VECTOR (7 downto 0));
+end component;
 
-architecture Behavioral of pipe is
+signal CLK : std_logic:='0';
+signal RST : std_logic;
+signal INS : std_logic_vector (7 downto 0);
+signal Q : std_logic_vector (7 downto 0);
 
+constant Clock_period : time := 50 ns;
 begin
-process (CLK)
+
+uut : pipeline port map(
+    CLK=>CLK,
+    RST=>RST,
+    IP=>INS
+);
+
+process
 begin
-if CLK='1' then 
-OP_OUT <= OP_IN;
-DEST_OUT <= DEST_IN;
-SRC1_OUT <= SRC1_IN;
-SRC2_OUT <= SRC2_IN;
-end if;
+CLK <= not(CLK);
+wait for Clock_period/2;
 end process;
+
+
+process
+begin
+RST <= '0';
+wait for 50 ns;
+RST <= '1';
+INS <= x"00";
+wait for 100 ns;
+
+end process;
+
+
+
 
 end Behavioral;

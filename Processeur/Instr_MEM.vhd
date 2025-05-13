@@ -34,18 +34,30 @@ use IEEE.NUMERIC_STD.ALL;
 entity Instr_MEM is
     Port ( ADR : in STD_LOGIC_VECTOR (7 downto 0);
            CLK : in STD_LOGIC;
-           OUTPUT : out STD_LOGIC_VECTOR (32 downto 0));
+           OUTPUT : out STD_LOGIC_VECTOR (31 downto 0));
 end Instr_MEM;
 
 architecture Behavioral of Instr_MEM is
 
 type instructions is array (255 downto 0) of STD_LOGIC_VECTOR (31 downto 0);
-signal R0M: instructions:= (others=>(others=>'0'));
+signal ROM: instructions:= (others=>(others=>'0'));
+signal ADD : std_logic_vector(7 downto 0) := x"01";
+signal MUL : std_logic_vector(7 downto 0) := x"02";
+signal SOU : std_logic_vector(7 downto 0) := x"03";
+signal COP : std_logic_vector(7 downto 0) := x"05";
+signal AFC : std_logic_vector(7 downto 0) := x"06";
+signal STR : std_logic_vector(7 downto 0) := x"07";
+signal LDR : std_logic_vector(7 downto 0) := x"08";
+ 
+
 begin
+
+ROM(0) <= ADD & x"01" & x"03" & x"07"; 
+
 process(CLK)
     begin
         if (CLK='1') then 
-            OUTPUT <= R0M(to_integer(unsigned(ADR)));
+            OUTPUT <= ROM(to_integer(unsigned(ADR)));
         end if;
 end process;
 end Behavioral;
