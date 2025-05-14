@@ -96,6 +96,17 @@ Port ( ADR : in STD_LOGIC_VECTOR (7 downto 0);
         );
 end component Data_MEM;
 
+component sync_mem is
+Port ( CLK : in STD_LOGIC;
+           IN_DEST : in STD_LOGIC_VECTOR (7 downto 0);
+           IN_OP : in STD_LOGIC_VECTOR (7 downto 0);
+           IN_SRC1: in STD_LOGIC_VECTOR (7 downto 0);
+           OUT_OP : out STD_LOGIC_VECTOR (7 downto 0);
+           OUT_SRC1 : out STD_LOGIC_VECTOR (7 downto 0);
+           OUT_DEST : out STD_LOGIC_VECTOR (7 downto 0)
+           );
+end component sync_mem;
+
 signal signal_out_mem_instr: STD_LOGIC_VECTOR (31 downto 0) := (others=>'0') ; -- signal de sortie de la memoire d'instruction
 
 signal DI_DST : STD_LOGIC_VECTOR (7 downto 0) := (others=>'0') ; -- signal A entre LIDI et DIEX => signal de destination
@@ -117,6 +128,10 @@ signal RE_OP : STD_LOGIC_VECTOR (7 downto 0) := (others=>'0') ; -- signal OP ent
 signal RE_SRC1 : STD_LOGIC_VECTOR (7 downto 0) := (others=>'0') ; -- signal B entre MEMRE et le retour => source 1
 
 signal MEM_OUT: STD_LOGIC_VECTOR (7 downto 0);
+
+signal signal_sync_op: STD_LOGIC_VECTOR (7 downto 0);
+signal signal_sync_dest : STD_LOGIC_VECTOR (7 downto 0);
+signal signal_sync_src : STD_LOGIC_VECTOR (7 downto 0);
 
 signal S_ALU: STD_LOGIC_VECTOR (7 downto 0);
 
@@ -204,11 +219,21 @@ RST => RST,
 OUTPUT => MEM_OUT
 );
 
+Sync : sync_mem port map(
+CLK=>CLK,
+IN_DEST => MEM_DST,
+IN_OP => MEM_OP,
+IN_SRC1=>MEM_src1,
+OUT_OP => signal_sync_op,
+OUT_src1 => signal_sync_src,
+OUT_DEST=> signal_sync_dest
+);
+
 mem_re : pipe port map(
 CLK=>CLK,
-OP_IN => MEM_OP,
-DEST_IN  =>MEM_DST,
-SRC1_IN  =>MEM_SRC1,
+OP_IN => signal_sync_op,
+DEST_IN  =>signal_sync_dest,
+SRC1_IN  =>signal_sync_src,
 SRC2_IN => (others=>'0'),
 OP_OUT=>RE_OP,
 DEST_OUT =>RE_DST,
@@ -223,11 +248,11 @@ LC_MEM <= '1' when MEM_OP = x"8" else '0';
 
 MUX_BDR <= QA_signal when DI_OP <= x"05" else DI_src1; -- COP operation
 
-MUX_ALU <= S_ALU when (EX_OP = x"01" or EX_OP = x"2" or EX_OP = x"3")  else EX_src1; -- add mul, sou
+MUX_ALU <= S_ALU when (EX_OP = x"01" or EX_OP = x"02" or EX_OP = x"03")  else EX_src1; -- add mul, sou
 
 MUX_MEM_LOAD <= MEM_OUT when MEM_op =x"8"  else MEM_src1;
 
-MUX_MEM_STR <= MEM_DST when MEM_OP=x"7" else MEM_src1;
+MUX_MEM_STR <= signal_sync_dest when MEM_OP=x"7" else MEM_src1;
 
   
 

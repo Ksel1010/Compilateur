@@ -35,34 +35,35 @@ entity sync_mem is
     Port ( CLK : in STD_LOGIC;
            IN_DEST : in STD_LOGIC_VECTOR (7 downto 0);
            IN_OP : in STD_LOGIC_VECTOR (7 downto 0);
-           OUT_OP : out STD_LOGIC_VECTOR (0 downto 0);
-           OUT_DEST : out STD_LOGIC_VECTOR (7 downto 0));
+           In_SRC1: in STD_LOGIC_VECTOR (7 downto 0);
+           OUT_OP : out STD_LOGIC_VECTOR (7 downto 0);
+           OUT_DEST : out STD_LOGIC_VECTOR (7 downto 0);
+           OUT_SRC1: out STD_LOGIC_VECTOR (7 downto 0));
 end sync_mem;
+
 
 architecture Behavioral of sync_mem is
 
-signal OP_signal:  STD_LOGIC_VECTOR (7 downto 0) := (others=>'0');
-signal DEST_signal:  STD_LOGIC_VECTOR (7 downto 0)  := (others=>'0');
+    signal OP_signal: STD_LOGIC_VECTOR (7 downto 0) := (others => '0');
+    signal DEST_signal: STD_LOGIC_VECTOR (7 downto 0) := (others => '0');
+    signal SRC_signal: STD_LOGIC_VECTOR (7 downto 0) := (others => '0');
 
 begin
 
-OP_signal <= IN_OP;
-DEST_signal <= IN_DEST;
-
-process
-begin
-    if IN_OP /= x"7" and IN_OP /= x"8" then
-        OUT_DEST <= DEST_signal;
-        OUT_OP <= OP_signal;
-    else
-        wait until rising_edge(CLK);  
-        OUT_DEST <= DEST_signal;
-        OUT_OP <= OP_signal;
-    end if;
-
-end process;
-
-
-
+    -- Assign signals
+    OP_signal <= IN_OP;
+    DEST_signal <= IN_DEST;
+    SRC_signal<= In_SRC1;
+    
+    
+    -- Synchronous process
+    process(CLK)
+    begin
+        if rising_edge(CLK) then
+                OUT_DEST <= DEST_signal;
+                OUT_OP <= OP_signal;
+                OUT_SRC1<=SRC_signal;
+        end if;
+    end process;
 
 end Behavioral;
