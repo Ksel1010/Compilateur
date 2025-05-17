@@ -7,29 +7,35 @@
 #define DIV 4 // /
 #define COP 5 // copy
 #define AFC 6 // affect 
+#define STR 7 // store used in the processor
+#define LDR 8 // load register used in processor
 
-#define JMP 7 // jump if inconditionnel
-#define JMF 8 // jump if false
 
-#define INF 9 // inferieur
-#define INFE 10 // inferieur ou egal
-#define SUP 11 // superieur
-#define SUPE 12 // superieur ou egal
-#define EQU 13 // equal
-#define NEQU 14 // not equal
-#define OR 15 // or
-#define AND 16 // and
-#define NOT 17 // not
-#define XOR 18 // xor
+
+
+
+#define JMP 9 // jump if inconditionnel
+#define JMF 10 // jump if false
+
+#define INF 11 // inferieur
+#define INFE 12 // inferieur ou egal
+#define SUP 13 // superieur
+#define SUPE 14 // superieur ou egal
+#define EQU 15 // equal
+#define NEQU 16 // not equal
+#define OR 17 // or
+#define AND 18 // and
+#define NOT 20 // not
+#define XOR 21 // xor
 
 #define PRI 19 // print
 
-#define NOP 20 //operation vide nop
+#define NOP 0 //operation vide nop
 
-#define CALL 21
-#define RET 22
-#define PUSH 23
-#define POP 24
+#define CALL 22
+#define RET 23
+#define PUSH 24
+#define POP 25
 
 typedef struct Instruction 
 {

@@ -191,6 +191,7 @@ I :
      | If
      | While
      | For
+     | Print 
      | tRETURN Operation tSEM {
           ASM_add(asmT, COP, 0, ts->indice, 0);
           TS_pop(ts);
@@ -373,8 +374,10 @@ Operation :
           | FunctionCall 
 ;
 
-
-
+/* ======== PRINT  ========= */
+Print : tPRINTF tOP Operation tCP tSEM{
+                  ASM_add(asmT, PRI, ts->indice, $3,0);  
+};
 
 /* ======== Declaration  ========= */
 Declaration : {printf("declaration: \n");}Type  DecIDRec tSEM ;
