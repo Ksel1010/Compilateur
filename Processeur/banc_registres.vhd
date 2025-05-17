@@ -39,8 +39,8 @@ entity banc_registres is
            DATA : in STD_LOGIC_VECTOR (7 downto 0);
            RST : in STD_LOGIC;
            CLK : in STD_LOGIC;
-           QA : out STD_LOGIC_VECTOR (7 downto 0);
-           QB : out STD_LOGIC_VECTOR (7 downto 0));
+           QA : out STD_LOGIC_VECTOR (7 downto 0):= (others=>'0');
+           QB : out STD_LOGIC_VECTOR (7 downto 0):= (others=>'0'));
 end banc_registres;
 
 architecture Behavioral of banc_registres is

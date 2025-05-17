@@ -38,13 +38,11 @@ end TEST_pipeline;
 architecture Behavioral of TEST_pipeline is
 component pipeline
     Port ( CLK : in STD_LOGIC;
-           RST : in STD_LOGIC;
-           IP : in STD_LOGIC_VECTOR (7 downto 0));
+           RST : in STD_LOGIC);
 end component;
 
 signal CLK : std_logic:='0';
 signal RST : std_logic;
-signal INS : std_logic_vector (7 downto 0);
 signal Q : std_logic_vector (7 downto 0);
 
 constant Clock_period : time := 50 ns;
@@ -52,8 +50,7 @@ begin
 
 uut : pipeline port map(
     CLK=>CLK,
-    RST=>RST,
-    IP=>INS
+    RST=>RST
 );
 
 process
@@ -70,24 +67,8 @@ begin
 --INS <= x"00";
 --wait for 200 ns;
 RST <= '1';
-INS <= x"01";
-wait for 250 ns;
-INS <= x"02";
-wait for 250 ns;
-INS <= x"03";
-wait for 250 ns;
-INS <= x"04";
-wait for 250 ns;
-INS <= x"05";
-wait for 250 ns;
-INS <= x"06";
-wait for 250 ns;
-INS <= x"06";
-wait for 250 ns;
-INS <= x"06";
-wait for 250 ns;
-INS <= x"06";
-wait for 250 ns;
+wait;
+
 
 end process;
 

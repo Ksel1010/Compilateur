@@ -40,7 +40,7 @@ entity ALU is
            S : out STD_LOGIC_VECTOR (7 downto 0);
            N : out STD_LOGIC;
            O : out STD_LOGIC;
-           Z : out STD_LOGIC;
+           Z : out STD_LOGIC:='0';
            C : out STD_LOGIC);
 end ALU;
 
@@ -59,4 +59,5 @@ begin
      N <= aux(7);
      C <= '1' when (aux(8) = '1') and Ctrl_Alu = "001" else '0';
      O <= '1' when (aux(15 downto 8) /= "00000000") and Ctrl_Alu = "010" else '0';
+     Z <= '1' when (A = x"00" and Ctrl_Alu = "000") else '0';
 end Behavioral;

@@ -33,12 +33,14 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 entity sync_mem is
     Port ( CLK : in STD_LOGIC;
-           IN_DEST : in STD_LOGIC_VECTOR (7 downto 0);
-           IN_OP : in STD_LOGIC_VECTOR (7 downto 0);
-           In_SRC1: in STD_LOGIC_VECTOR (7 downto 0);
-           OUT_OP : out STD_LOGIC_VECTOR (7 downto 0);
-           OUT_DEST : out STD_LOGIC_VECTOR (7 downto 0);
-           OUT_SRC1: out STD_LOGIC_VECTOR (7 downto 0));
+           OP_IN : in STD_LOGIC_VECTOR (7 downto 0);
+           DEST_IN : in STD_LOGIC_VECTOR (7 downto 0);
+           SRC1_IN : in STD_LOGIC_VECTOR (7 downto 0);
+           SRC2_IN : in STD_LOGIC_VECTOR (7 downto 0);
+           OP_OUT : out STD_LOGIC_VECTOR (7 downto 0);
+           DEST_OUT : out STD_LOGIC_VECTOR (7 downto 0);
+           SRC1_OUT : out STD_LOGIC_VECTOR (7 downto 0);
+           SRC2_OUT : out STD_LOGIC_VECTOR (7 downto 0));
 end sync_mem;
 
 
@@ -46,24 +48,25 @@ architecture Behavioral of sync_mem is
 
     signal OP_signal: STD_LOGIC_VECTOR (7 downto 0) := (others => '0');
     signal DEST_signal: STD_LOGIC_VECTOR (7 downto 0) := (others => '0');
-    signal SRC_signal: STD_LOGIC_VECTOR (7 downto 0) := (others => '0');
+    signal SRC1_signal: STD_LOGIC_VECTOR (7 downto 0) := (others => '0');
+    signal SRC2_signal: STD_LOGIC_VECTOR (7 downto 0) := (others => '0');
 
 begin
 
-    -- Assign signals
-    OP_signal <= IN_OP;
-    DEST_signal <= IN_DEST;
-    SRC_signal<= In_SRC1;
-    
-    
-    -- Synchronous process
-    process(CLK)
-    begin
-        if rising_edge(CLK) then
-                OUT_DEST <= DEST_signal;
-                OUT_OP <= OP_signal;
-                OUT_SRC1<=SRC_signal;
-        end if;
-    end process;
+SRC1_signal <= SRC1_IN;
+SRC1_OUT <= SRC1_signal;
+
+OP_signal<=OP_IN;
+DEST_signal<=DEST_IN;
+SRC2_signal<=SRC2_IN;
+
+process (CLK)
+begin
+if CLK='1' then 
+OP_OUT <= OP_signal;
+DEST_OUT <= DEST_signal;
+SRC2_OUT <= SRC2_signal;
+end if;
+end process;
 
 end Behavioral;
