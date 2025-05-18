@@ -376,7 +376,7 @@ Operation :
 
 /* ======== PRINT  ========= */
 Print : tPRINTF tOP Operation tCP tSEM{
-                  ASM_add(asmT, PRI, ts->indice, $3,0);  
+                  ASM_add(asmT, PRI, ts->indice, 0, 0);  
 };
 
 /* ======== Declaration  ========= */
@@ -541,10 +541,10 @@ While : tWHILE tOP {
                ligne->addSrc1 =  asmT->last->indice +1;
           };
 
-//Une boucle for c'est : for (affectation ou declaration, condition d'arret, incrementation)
+//Une boucle for c'est : for (declaration, condition d'arret, incrementation)
 // c soit on fait pop de asm pour enlever AFFID afin de la mettre apres le body soit on utilise des sauts de la maniere suivante:
 /*
-     1/AFF | dec 
+     1/AFF 
      2/Op (ex: i<5)<--
  ----3/JMF           |
  | -------4/jmp      |
@@ -598,17 +598,16 @@ For : tFOR {
 
 
 %%
-int main(void)
+int main(int argc, char* argv[])
 {
      ts = TS_init();
      asmT = ASM_init();
      funcT = FT_init();
      yyparse();
-
      printf("\n\nRESUMEE\n\n");
-     ASM_print(asmT);
+     ASM_print(asmT, argv[1]);
      TS_print(ts);
-
+ 
 
      TS_free(ts);
      ASM_freeAll(asmT);

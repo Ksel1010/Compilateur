@@ -48,14 +48,20 @@ Instruction* ASM_add(Asm* asmT, char operation , int dst, int src1, int src2){
 }
 
 
-void ASM_print(Asm* asmT){
+void ASM_print(Asm* asmT, char* destination){
     int i = 0;
+    FILE * file = fopen(destination, "w");
+    if (file == NULL) {
+       perror("Error opening file");
+       exit(1);
+   }
     while(asmT->first != NULL){
         Instruction* inst = asmT->first;
-        printf("%d : %d %d %d %d\n",i , inst->op, inst->addDst, inst->addSrc1, inst->addSrc2);
+        fprintf(file,"%d %d %d %d\n", inst->op, inst->addDst, inst->addSrc1, inst->addSrc2);
         ASM_next(asmT);
         i++;
     }
+    fclose(file);
 }
 
 

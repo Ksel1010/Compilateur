@@ -259,15 +259,6 @@ RST => RST,
 OUTPUT => MEM_OUT
 );
 
---Sync : sync_mem port map(
---CLK=>CLK,
---IN_DEST => MEM_DST,
---IN_OP => MEM_OP,
---IN_SRC1=>MEM_src1,
---OUT_OP => signal_sync_op,
---OUT_src1 => signal_sync_src,
---OUT_DEST=> signal_sync_dest
---);
 
 mem_re : sync_mem port map(
 CLK=>CLK,
@@ -306,7 +297,7 @@ end process;
 JMP_FALSE_FLAG <='1' when Z_FLAG = '1' and EX_OP = x"0a" else '0';
 
 
-LC_RE <= '0' when (RE_OP=x"00" or RE_OP=x"07" or  (RE_OP>x"08"  and RE_OP/=x"09")) else '1';-- 1 ecriture : je necris pas si j'ai un str 7 ou pint 8
+LC_RE <= '0' when (RE_OP=x"00" or RE_OP=x"07" or  (RE_OP>x"08"  and RE_OP/=x"09")) else '1';-- 1 ecriture : je necris pas si j'ai un str 7 ou print 8
 
 LC_EX <= "000" when EX_op > x"03" else EX_op (2 downto 0);
 

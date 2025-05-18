@@ -75,7 +75,6 @@ signal PRINT :std_logic_vector(7 downto 0) := x"13";
 
 begin
 
---ROM(1) <= JMP & x"06" & x"00" & x"00";  
 ROM(0) <= AFC & x"01" & x"09" & x"00";  -- 9 à R1
 ROM(1) <= AFC & x"02" & x"07" & x"00";  -- 7 a R2
 ROM(2) <= AFC & x"03" & x"06" & x"00";  -- 6 a R3
@@ -86,7 +85,7 @@ ROM(6) <= COP & x"01" & x"04" & x"00";  -- R1 = R4 = 0x0d
 ROM(7) <= STR & x"05" & x"03" & x"00";  -- @5 = R3 = 0x06
 ROM(8) <= STR & x"01" & x"01" & x"00";  -- @1 = R1 = 0x0d
 ROM(9) <= LDR & x"07" & x"05" & x"00";  -- R7 = @5 = 0x06
-ROM(10) <= JMF & x"10" & x"00" & x"00";  -- JMP 16 => si false on ne fait rien sinon on fait les affectations et on imprime
+ROM(10) <= JMF & x"10" & x"0f" & x"00";  -- JMP 16 => si false on ne fait rien sinon on fait les affectations et on imprime
 ROM(11) <= AFC & x"0b" & x"0b" & x"00";
 ROM(12) <= AFC & x"0c" & x"0c" & x"00";
 ROM(13) <= AFC & x"0d" & x"0d" & x"00";
