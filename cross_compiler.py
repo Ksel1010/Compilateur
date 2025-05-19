@@ -38,7 +38,7 @@ def traiter_instruction(code, dst, op1, op2):
     elif code == DIV:
         return f"LDR R1 {op1} \nLDR R2 {op2} \nDIV R0 R1 R2 \nSTR {dst} R0 0"
     elif code == COP:
-        return f"COP R{dst} R{op1} {op2}"
+        return f"LDR R1 {op1} {op2} \nCOP R0 R1 {op2}\nSTR {dst} R0"
     elif code == AFC:
         return f"AFC R0 {op1} {op2} \nSTR {dst} R0"
     elif code == STR:
