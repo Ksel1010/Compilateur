@@ -38,12 +38,12 @@ end TEST_pipeline;
 architecture Behavioral of TEST_pipeline is
 component pipeline
     Port ( CLK : in STD_LOGIC;
-           RST : in STD_LOGIC);
+           RST : in STD_LOGIC;
+           OUTPUT : out std_logic_vector(7 downto 0));
 end component;
 
 signal CLK : std_logic:='0';
 signal RST : std_logic;
-signal Q : std_logic_vector (7 downto 0);
 
 constant Clock_period : time := 50 ns;
 begin

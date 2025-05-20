@@ -75,24 +75,51 @@ signal PRINT :std_logic_vector(7 downto 0) := x"13";
 
 begin
 
-ROM(0) <= AFC & x"01" & x"09" & x"00";  -- 9 à R1
-ROM(1) <= AFC & x"02" & x"07" & x"00";  -- 7 a R2
-ROM(2) <= AFC & x"03" & x"06" & x"00";  -- 6 a R3
-ROM(3) <= ADD & x"04" & x"02" & x"03";  -- R4 = R2 + R3 = 13 = 0x0d
-ROM(4) <= ADD & x"01" & x"01" & x"01";  -- R1 = R1 + R1 = 9 + 9 = 18 = 0x12
-ROM(5) <= COP & x"00" & x"01" & x"00";  -- R0 = R1 = 0x12
-ROM(6) <= COP & x"01" & x"04" & x"00";  -- R1 = R4 = 0x0d
-ROM(7) <= STR & x"05" & x"03" & x"00";  -- @5 = R3 = 0x06
-ROM(8) <= STR & x"01" & x"01" & x"00";  -- @1 = R1 = 0x0d
-ROM(9) <= LDR & x"07" & x"05" & x"00";  -- R7 = @5 = 0x06
-ROM(10) <= JMF & x"10" & x"0f" & x"00";  -- JMP 16 => si false on ne fait rien sinon on fait les affectations et on imprime
-ROM(11) <= AFC & x"0b" & x"0b" & x"00";
-ROM(12) <= AFC & x"0c" & x"0c" & x"00";
-ROM(13) <= AFC & x"0d" & x"0d" & x"00";
-ROM(14) <= AFC & x"0e" & x"0e" & x"00";
-ROM(15) <= PRINT & x"0e" & x"00" & x"00";  -- R7 = @5 = 0x06
+--ROM(0) <= AFC & x"01" & x"09" & x"00";  -- 9 à R1
+--ROM(1) <= AFC & x"02" & x"07" & x"00";  -- 7 a R2
+--ROM(2) <= AFC & x"03" & x"06" & x"00";  -- 6 a R3
+--ROM(3) <= ADD & x"04" & x"02" & x"03";  -- R4 = R2 + R3 = 13 = 0x0d
+--ROM(4) <= ADD & x"01" & x"01" & x"01";  -- R1 = R1 + R1 = 9 + 9 = 18 = 0x12
+--ROM(5) <= COP & x"00" & x"01" & x"00";  -- R0 = R1 = 0x12
+--ROM(6) <= COP & x"01" & x"04" & x"00";  -- R1 = R4 = 0x0d
+--ROM(7) <= STR & x"05" & x"03" & x"00";  -- @5 = R3 = 0x06
+--ROM(8) <= STR & x"01" & x"01" & x"00";  -- @1 = R1 = 0x0d
+--ROM(9) <= LDR & x"07" & x"05" & x"00";  -- R7 = @5 = 0x06
+--ROM(10) <= JMF & x"10" & x"00" & x"00";  -- JMP 16 => si false on ne fait rien sinon on fait les affectations et on imprime
+--ROM(11) <= AFC & x"0b" & x"0b" & x"00";
+--ROM(12) <= AFC & x"0c" & x"0c" & x"00";
+--ROM(13) <= AFC & x"0d" & x"0d" & x"00";
+--ROM(14) <= AFC & x"0e" & x"0e" & x"00";
+--ROM(15) <= PRINT & x"0e" & x"00" & x"00";  -- R7 = @5 = 0x06
 
+ROM(0) <= JMP & x"01" & x"00" & x"00";
 
+ROM(1) <= AFC & x"01" & x"00" & x"00";
+ROM(2) <= COP & x"00" & x"01" & x"00";
+
+ROM(3) <= AFC & x"02" & x"14" & x"00";
+ROM(4) <= COP & x"01" & x"02" & x"00";
+
+ROM(5) <= COP & x"02" & x"01" & x"00";
+
+ROM(6) <= JMF & x"10" & x"02" & x"00";
+
+ROM(7) <= COP & x"02" & x"00" & x"00";
+ROM(8) <= AFC & x"03" & x"01" & x"00";
+ROM(9) <= ADD & x"02" & x"03" & x"02";  
+ROM(10) <= COP & x"00" & x"02" & x"00";
+
+ROM(11) <= AFC & x"02" & x"14" & x"00";
+ROM(12) <= COP & x"03" & x"00" & x"00";
+ROM(13) <= SOU & x"02" & x"02" & x"03";
+
+ROM(14) <= COP & x"01" & x"02" & x"00";
+
+ROM(15) <= JMP & x"05" & x"00" & x"00";
+
+ROM(16) <= COP & x"02" & x"00" & x"00";
+
+ROM(17) <= PRINT & x"02" & x"00" & x"00";
 
 
 
@@ -170,7 +197,7 @@ process(CLK)
 
     begin
         if (CLK='1') then 
-            if signal_alea = '0' and JMP_FALSE_FLAG = '0'then --pas d'alea j'incrémente
+            if signal_alea = '0' then --pas d'alea j'incrémente
                 last_instruction <= ROM(to_integer(unsigned(ADR)));
             else -- exite un alea j'envoie une operation NOP
                 last_instruction<= (others=>'0'); 

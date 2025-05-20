@@ -287,7 +287,7 @@ begin
                      IP_unsigned <= unsigned(EX_DST);
         else
             if (signal_alea = '0') then 
-                IP_unsigned <= unsigned(IP) + 1; --si pas d'alea de données j'icrémente sinon je n'incrémente pas
+                IP_unsigned <= unsigned(IP) + 1; --si pas d'alea de données j'incrémente sinon je n'incrémente pas
             end if;
         end if;
     end if;

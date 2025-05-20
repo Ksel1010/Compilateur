@@ -1,9 +1,10 @@
 int main () {
     int a = 0;
-    while (a<20)
+    int b = 20;
+    while (b)
     {
         a = a + 1;
-        a = a * 2;
+        b = 20 - a;
     }
     printf(a);
 }
